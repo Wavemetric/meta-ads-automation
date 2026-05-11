@@ -256,24 +256,17 @@ export default function QueuePage() {
 
               {/* Action buttons */}
               {item.status === 'pending' && (
-                <div
-                  className="flex gap-2 mt-4 pt-4"
-                  style={{ borderTop: '1px solid #e5e7eb' }}
-                >
+                <div className="flex justify-end gap-2 mt-3">
                   <button
                     onClick={() => handleApprove(item.id)}
-                    className="flex-1 text-sm py-2 rounded-lg font-medium transition-all duration-150"
-                    style={{
-                      background: '#3b82f6',
-                      color: '#fff',
-                      boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
-                    }}
+                    className="text-xs px-3 py-1.5 rounded-md font-medium transition-colors"
+                    style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}
                   >
-                    확인 (실행 보류)
+                    확인
                   </button>
                   <button
                     onClick={() => handleReject(item.id)}
-                    className="px-5 text-sm py-2 rounded-lg font-medium transition-all duration-150"
+                    className="text-xs px-3 py-1.5 rounded-md font-medium transition-colors"
                     style={{
                       background: '#fef2f2',
                       border: '1px solid #fecaca',
