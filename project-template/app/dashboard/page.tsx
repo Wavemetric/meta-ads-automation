@@ -73,23 +73,20 @@ export default async function DashboardPage() {
   function severityBadge(severity: string) {
     if (severity === 'high')
       return {
-        bg: 'rgba(239,68,68,0.1)',
-        border: 'rgba(239,68,68,0.25)',
-        color: '#f87171',
-        glow: '0 0 8px rgba(239,68,68,0.2)',
+        bg: '#fef2f2',
+        border: '#fecaca',
+        color: '#dc2626',
       }
     if (severity === 'medium')
       return {
-        bg: 'rgba(234,179,8,0.1)',
-        border: 'rgba(234,179,8,0.25)',
-        color: '#fbbf24',
-        glow: '0 0 8px rgba(234,179,8,0.2)',
+        bg: '#fefce8',
+        border: '#fde68a',
+        color: '#ca8a04',
       }
     return {
-      bg: 'rgba(16,185,129,0.1)',
-      border: 'rgba(16,185,129,0.25)',
-      color: '#34d399',
-      glow: '0 0 8px rgba(16,185,129,0.2)',
+      bg: '#f0fdf4',
+      border: '#bbf7d0',
+      color: '#16a34a',
     }
   }
 
@@ -97,46 +94,30 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Page header */}
       <div>
-        <h1
-          className="text-2xl font-bold"
-          style={{
-            background: 'linear-gradient(90deg, #fff 60%, rgba(255,255,255,0.5))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
+        <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>
           KPI 모니터링
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
           실시간 광고 성과 대시보드
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {kpiCards.map(({ label, value, accent, accentRgb }) => (
+        {kpiCards.map(({ label, value, accent }) => (
           <div
             key={label}
             className="rounded-xl p-5 transition-all duration-200"
             style={{
-              background: `linear-gradient(135deg, rgba(${accentRgb},0.06) 0%, rgba(17,17,24,0.8) 100%)`,
-              border: `1px solid rgba(${accentRgb},0.18)`,
-              backdropFilter: 'blur(12px)',
+              background: '#ffffff',
+              borderTop: `4px solid ${accent}`,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
             }}
           >
-            <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-xs font-medium" style={{ color: '#6b7280' }}>
               {label}
             </p>
-            <p
-              className="text-2xl font-bold mt-2 tracking-tight"
-              style={{
-                background: `linear-gradient(135deg, #fff 40%, ${accent})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
+            <p className="text-2xl font-bold mt-2 tracking-tight" style={{ color: '#111827' }}>
               {value}
             </p>
           </div>
@@ -147,24 +128,24 @@ export default async function DashboardPage() {
       <div
         className="rounded-xl overflow-hidden"
         style={{
-          background: 'rgba(17,17,24,0.6)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          backdropFilter: 'blur(12px)',
+          background: '#ffffff',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
         }}
       >
         <div
           className="px-6 py-4 flex items-center justify-between"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderBottom: '1px solid #e5e7eb' }}
         >
-          <h2 className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          <h2 className="text-sm font-semibold" style={{ color: '#111827' }}>
             캠페인 성과
           </h2>
           <span
             className="text-xs px-2 py-0.5 rounded-full"
             style={{
-              background: 'rgba(59,130,246,0.1)',
-              color: '#60a5fa',
-              border: '1px solid rgba(59,130,246,0.2)',
+              background: '#eff6ff',
+              color: '#3b82f6',
+              border: '1px solid #bfdbfe',
             }}
           >
             {campaigns.length}개 캠페인
@@ -173,7 +154,7 @@ export default async function DashboardPage() {
 
         {campaigns.length === 0 ? (
           <div className="px-6 py-16 text-center">
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <p className="text-sm" style={{ color: '#9ca3af' }}>
               데이터 없음 — Cron 수집 후 표시됩니다
             </p>
           </div>
@@ -181,12 +162,12 @@ export default async function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                   {['캠페인', '지출', '전환', 'CPA', 'CTR', 'ROAS'].map(h => (
                     <th
                       key={h}
                       className="px-5 py-3 text-left text-xs font-medium"
-                      style={{ color: 'rgba(255,255,255,0.3)' }}
+                      style={{ color: '#6b7280', background: '#f9fafb' }}
                     >
                       {h}
                     </th>
@@ -198,29 +179,30 @@ export default async function DashboardPage() {
                   <tr
                     key={c.campaign_id}
                     style={{
-                      borderBottom: i < campaigns.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                      borderBottom: i < campaigns.length - 1 ? '1px solid #f3f4f6' : 'none',
+                      background: i % 2 === 1 ? '#f9fafb' : '#ffffff',
                     }}
-                    className="transition-colors duration-150 hover:bg-white/[0.02]"
+                    className="transition-colors duration-150"
                   >
                     <td
                       className="px-5 py-3.5 font-medium max-w-[220px] truncate"
-                      style={{ color: 'rgba(255,255,255,0.85)' }}
+                      style={{ color: '#111827' }}
                     >
                       {c.campaign_name}
                     </td>
-                    <td className="px-5 py-3.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <td className="px-5 py-3.5" style={{ color: '#374151' }}>
                       {fmt(c.spend, '₩')}
                     </td>
-                    <td className="px-5 py-3.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <td className="px-5 py-3.5" style={{ color: '#374151' }}>
                       {fmt(c.conversions)}
                     </td>
-                    <td className="px-5 py-3.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <td className="px-5 py-3.5" style={{ color: '#374151' }}>
                       {fmt(c.cpa ? Math.round(c.cpa) : null, '₩')}
                     </td>
-                    <td className="px-5 py-3.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <td className="px-5 py-3.5" style={{ color: '#374151' }}>
                       {c.ctr != null ? `${c.ctr.toFixed(2)}%` : '-'}
                     </td>
-                    <td className="px-5 py-3.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <td className="px-5 py-3.5" style={{ color: '#374151' }}>
                       {c.roas != null ? c.roas.toFixed(2) : '-'}
                     </td>
                   </tr>
@@ -236,29 +218,28 @@ export default async function DashboardPage() {
         <div
           className="rounded-xl overflow-hidden"
           style={{
-            background: 'rgba(17,17,24,0.6)',
-            border: '1px solid rgba(234,179,8,0.15)',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 0 20px rgba(234,179,8,0.04)',
+            background: '#ffffff',
+            border: '1px solid #fde68a',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           }}
         >
           <div
             className="px-6 py-4 flex items-center justify-between"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ borderBottom: '1px solid #e5e7eb' }}
           >
             <div className="flex items-center gap-2">
               <span
                 className="w-1.5 h-1.5 rounded-full inline-block"
-                style={{ background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.7)' }}
+                style={{ background: '#f59e0b' }}
               />
-              <h2 className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
+              <h2 className="text-sm font-semibold" style={{ color: '#92400e' }}>
                 승인 대기 ({queue.length}건)
               </h2>
             </div>
             <a
               href="/dashboard/queue"
               className="text-xs transition-colors duration-150"
-              style={{ color: '#60a5fa' }}
+              style={{ color: '#3b82f6' }}
             >
               전체 보기 →
             </a>
@@ -274,7 +255,7 @@ export default async function DashboardPage() {
                   className="px-6 py-3.5 flex items-center gap-3"
                   style={{
                     borderBottom: i < Math.min(queue.length, 3) - 1
-                      ? '1px solid rgba(255,255,255,0.04)'
+                      ? '1px solid #f3f4f6'
                       : 'none',
                   }}
                 >
@@ -284,15 +265,14 @@ export default async function DashboardPage() {
                       background: badge.bg,
                       border: `1px solid ${badge.border}`,
                       color: badge.color,
-                      boxShadow: badge.glow,
                     }}
                   >
                     {item.severity}
                   </span>
-                  <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="text-sm truncate" style={{ color: '#374151' }}>
                     {item.campaign_name}
                   </span>
-                  <span className="text-xs ml-auto shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  <span className="text-xs ml-auto shrink-0" style={{ color: '#9ca3af' }}>
                     {change.action}
                   </span>
                 </div>

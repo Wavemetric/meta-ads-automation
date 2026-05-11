@@ -5,17 +5,17 @@ import { createBrowserClient } from '@/lib/supabase/browser'
 import type { ActionQueue, ProposedChange } from '@/lib/supabase/types'
 
 const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string; glow: string }> = {
-  high:   { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)',  color: '#f87171', glow: '0 0 10px rgba(239,68,68,0.2)' },
-  medium: { bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  color: '#fbbf24', glow: '0 0 10px rgba(234,179,8,0.2)' },
-  low:    { bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', color: '#34d399', glow: '0 0 10px rgba(16,185,129,0.15)' },
+  high:   { bg: '#fef2f2', border: '#fecaca', color: '#dc2626', glow: 'none' },
+  medium: { bg: '#fefce8', border: '#fde68a', color: '#ca8a04', glow: 'none' },
+  low:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a', glow: 'none' },
 }
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  pending:  { color: '#fbbf24', bg: 'rgba(234,179,8,0.08)',   border: 'rgba(234,179,8,0.2)' },
-  approved: { color: '#60a5fa', bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)' },
-  rejected: { color: 'rgba(255,255,255,0.3)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)' },
-  executed: { color: '#34d399', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)' },
-  failed:   { color: '#f87171', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.2)' },
+  pending:  { color: '#ca8a04', bg: '#fefce8', border: '#fde68a' },
+  approved: { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+  rejected: { color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' },
+  executed: { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+  failed:   { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
 }
 
 function fmt(v: number | null | undefined, prefix = '') {
@@ -70,18 +70,10 @@ export default function QueuePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{
-              background: 'linear-gradient(90deg, #fff 60%, rgba(255,255,255,0.5))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>
             승인 대기 큐
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
             실행 전 검토가 필요한 액션 목록
           </p>
         </div>
@@ -89,7 +81,7 @@ export default function QueuePage() {
         {/* Filter tabs */}
         <div
           className="flex gap-1 p-1 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}
         >
           {(['pending', 'all'] as const).map(f => (
             <button
@@ -97,11 +89,11 @@ export default function QueuePage() {
               onClick={() => setFilter(f)}
               className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-150"
               style={filter === f ? {
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                background: '#3b82f6',
                 color: '#fff',
-                boxShadow: '0 0 10px rgba(59,130,246,0.2)',
+                boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
               } : {
-                color: 'rgba(255,255,255,0.4)',
+                color: '#6b7280',
               }}
             >
               {f === 'pending' ? '대기 중' : '전체'}
@@ -112,10 +104,10 @@ export default function QueuePage() {
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center gap-2 py-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
+        <div className="flex items-center gap-2 py-4" style={{ color: '#9ca3af' }}>
           <div
             className="w-3 h-3 rounded-full animate-pulse"
-            style={{ background: 'rgba(59,130,246,0.5)' }}
+            style={{ background: '#3b82f6' }}
           />
           <span className="text-sm">불러오는 중...</span>
         </div>
@@ -126,21 +118,21 @@ export default function QueuePage() {
         <div
           className="rounded-xl px-6 py-16 text-center"
           style={{
-            background: 'rgba(17,17,24,0.6)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            backdropFilter: 'blur(12px)',
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           }}
         >
           <div
             className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center"
-            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}
+            style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}
           >
-            <span style={{ color: '#34d399', fontSize: '18px' }}>✓</span>
+            <span style={{ color: '#16a34a', fontSize: '18px' }}>✓</span>
           </div>
-          <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          <p className="text-sm font-medium" style={{ color: '#374151' }}>
             승인 대기 항목이 없습니다
           </p>
-          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
+          <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
             규칙이 위반되면 이곳에 표시됩니다
           </p>
         </div>
@@ -157,9 +149,9 @@ export default function QueuePage() {
               key={item.id}
               className="rounded-xl p-5 transition-all duration-200"
               style={{
-                background: 'rgba(17,17,24,0.7)',
-                border: `1px solid rgba(255,255,255,0.07)`,
-                backdropFilter: 'blur(12px)',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
               }}
             >
               <div className="flex items-start gap-3">
@@ -170,7 +162,6 @@ export default function QueuePage() {
                     background: sev.bg,
                     border: `1px solid ${sev.border}`,
                     color: sev.color,
-                    boxShadow: sev.glow,
                   }}
                 >
                   {item.severity.toUpperCase()}
@@ -179,17 +170,16 @@ export default function QueuePage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    <p className="text-sm font-semibold truncate" style={{ color: '#111827' }}>
                       {item.campaign_name ?? item.campaign_id}
                     </p>
                     {change.is_midnight_rule && (
                       <span
                         className="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium"
                         style={{
-                          background: 'rgba(99,102,241,0.15)',
-                          border: '1px solid rgba(99,102,241,0.25)',
-                          color: '#a5b4fc',
-                          boxShadow: '0 0 6px rgba(99,102,241,0.15)',
+                          background: '#eef2ff',
+                          border: '1px solid #c7d2fe',
+                          color: '#6366f1',
                         }}
                       >
                         00시 규칙
@@ -197,36 +187,36 @@ export default function QueuePage() {
                     )}
                   </div>
 
-                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
                     {change.reason}
                   </p>
 
                   {/* Metrics row */}
                   <div
                     className="flex flex-wrap gap-3 mt-3 px-3 py-2 rounded-lg"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                    style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}
                   >
                     <div>
-                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>액션</span>
-                      <p className="text-xs font-medium mt-0.5" style={{ color: '#60a5fa' }}>{change.action}</p>
+                      <span className="text-xs" style={{ color: '#9ca3af' }}>액션</span>
+                      <p className="text-xs font-medium mt-0.5" style={{ color: '#2563eb' }}>{change.action}</p>
                     </div>
                     <div
                       className="w-px self-stretch"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}
+                      style={{ background: '#e5e7eb' }}
                     />
                     <div>
-                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>현재값</span>
-                      <p className="text-xs font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <span className="text-xs" style={{ color: '#9ca3af' }}>현재값</span>
+                      <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>
                         {fmt(change.current_value)}
                       </p>
                     </div>
                     <div
                       className="w-px self-stretch"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}
+                      style={{ background: '#e5e7eb' }}
                     />
                     <div>
-                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>임계값</span>
-                      <p className="text-xs font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <span className="text-xs" style={{ color: '#9ca3af' }}>임계값</span>
+                      <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>
                         {fmt(change.threshold)}
                       </p>
                     </div>
@@ -234,11 +224,11 @@ export default function QueuePage() {
                       <>
                         <div
                           className="w-px self-stretch"
-                          style={{ background: 'rgba(255,255,255,0.06)' }}
+                          style={{ background: '#e5e7eb' }}
                         />
                         <div>
-                          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>제안 예산</span>
-                          <p className="text-xs font-medium mt-0.5" style={{ color: '#34d399' }}>
+                          <span className="text-xs" style={{ color: '#9ca3af' }}>제안 예산</span>
+                          <p className="text-xs font-medium mt-0.5" style={{ color: '#16a34a' }}>
                             {fmt(change.proposed_budget, '₩')}
                           </p>
                         </div>
@@ -246,7 +236,7 @@ export default function QueuePage() {
                     )}
                   </div>
 
-                  <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  <p className="text-xs mt-2" style={{ color: '#9ca3af' }}>
                     {new Date(item.created_at).toLocaleString('ko-KR')}
                   </p>
                 </div>
@@ -268,15 +258,15 @@ export default function QueuePage() {
               {item.status === 'pending' && (
                 <div
                   className="flex gap-2 mt-4 pt-4"
-                  style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ borderTop: '1px solid #e5e7eb' }}
                 >
                   <button
                     onClick={() => handleApprove(item.id)}
                     className="flex-1 text-sm py-2 rounded-lg font-medium transition-all duration-150"
                     style={{
-                      background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                      background: '#3b82f6',
                       color: '#fff',
-                      boxShadow: '0 0 16px rgba(59,130,246,0.2)',
+                      boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
                     }}
                   >
                     확인 (실행 보류)
@@ -285,9 +275,9 @@ export default function QueuePage() {
                     onClick={() => handleReject(item.id)}
                     className="px-5 text-sm py-2 rounded-lg font-medium transition-all duration-150"
                     style={{
-                      background: 'rgba(239,68,68,0.08)',
-                      border: '1px solid rgba(239,68,68,0.2)',
-                      color: '#f87171',
+                      background: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      color: '#dc2626',
                     }}
                   >
                     거절

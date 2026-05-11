@@ -17,9 +17,9 @@ const SCOPES = ['campaign', 'adset']
 const THRESHOLD_TYPES = ['fixed', 'product_cpa']
 
 const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string; glow: string }> = {
-  high:   { bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.25)',   color: '#f87171', glow: '0 0 8px rgba(239,68,68,0.2)' },
-  medium: { bg: 'rgba(234,179,8,0.1)',   border: 'rgba(234,179,8,0.25)',   color: '#fbbf24', glow: '0 0 8px rgba(234,179,8,0.2)' },
-  low:    { bg: 'rgba(16,185,129,0.1)',  border: 'rgba(16,185,129,0.25)',  color: '#34d399', glow: '0 0 8px rgba(16,185,129,0.15)' },
+  high:   { bg: '#fef2f2', border: '#fecaca', color: '#dc2626', glow: 'none' },
+  medium: { bg: '#fefce8', border: '#fde68a', color: '#ca8a04', glow: 'none' },
+  low:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a', glow: 'none' },
 }
 
 const EMPTY: Omit<AutomationRule, 'id' | 'created_at' | 'updated_at'> = {
@@ -34,14 +34,14 @@ const EMPTY: Omit<AutomationRule, 'id' | 'created_at' | 'updated_at'> = {
 // 공통 입력 스타일
 const inputCls = "w-full mt-1 rounded-lg px-3 py-2.5 text-sm transition-all duration-150 focus:outline-none"
 const inputStyle = {
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  color: 'rgba(255,255,255,0.85)',
+  background: '#ffffff',
+  border: '1px solid #d1d5db',
+  color: '#111827',
 }
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+    <label className="text-xs font-medium" style={{ color: '#6b7280' }}>
       {children}
     </label>
   )
@@ -97,18 +97,10 @@ export default function RulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{
-              background: 'linear-gradient(90deg, #fff 60%, rgba(255,255,255,0.5))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>
             자동화 규칙 관리
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
             광고 성과 기반 자동 액션 규칙
           </p>
         </div>
@@ -116,9 +108,9 @@ export default function RulesPage() {
           onClick={() => { setShowForm(true); setEditing(null); setForm(EMPTY) }}
           className="text-sm px-4 py-2 rounded-lg font-medium transition-all duration-150"
           style={{
-            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            background: '#3b82f6',
             color: '#fff',
-            boxShadow: '0 0 16px rgba(59,130,246,0.3)',
+            boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
           }}
         >
           + 규칙 추가
@@ -130,21 +122,12 @@ export default function RulesPage() {
         <div
           className="rounded-xl p-6 space-y-5"
           style={{
-            background: 'rgba(17,17,24,0.8)',
-            border: '1px solid rgba(59,130,246,0.2)',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 0 30px rgba(59,130,246,0.06)',
+            background: '#ffffff',
+            border: '1px solid #bfdbfe',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           }}
         >
-          <h2
-            className="text-sm font-semibold"
-            style={{
-              background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+          <h2 className="text-sm font-semibold" style={{ color: '#2563eb' }}>
             {editing ? '규칙 수정' : '새 규칙 추가'}
           </h2>
 
@@ -265,11 +248,11 @@ export default function RulesPage() {
           </div>
 
           {/* 구분선 */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+          <div style={{ borderTop: '1px solid #e5e7eb' }} />
 
           {/* 상세 필터 */}
           <div>
-            <p className="text-xs font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: '#6b7280' }}>
               상세 필터 (선택)
             </p>
             <div className="grid grid-cols-2 gap-4">
@@ -285,14 +268,13 @@ export default function RulesPage() {
                       onClick={() => setForm(p => ({ ...p, scope: s }))}
                       className="flex-1 py-2 rounded-lg text-xs font-medium transition-all duration-150"
                       style={form.scope === s ? {
-                        background: 'rgba(59,130,246,0.2)',
-                        border: '1px solid rgba(59,130,246,0.4)',
-                        color: '#60a5fa',
-                        boxShadow: '0 0 8px rgba(59,130,246,0.15)',
+                        background: '#eff6ff',
+                        border: '1px solid #3b82f6',
+                        color: '#2563eb',
                       } : {
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: 'rgba(255,255,255,0.4)',
+                        background: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        color: '#6b7280',
                       }}
                     >
                       {s === 'campaign' ? '캠페인' : '광고세트'}
@@ -355,12 +337,11 @@ export default function RulesPage() {
                 <div
                   className="w-4 h-4 rounded flex items-center justify-center transition-all duration-150 shrink-0"
                   style={form.is_midnight_rule ? {
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    border: '1px solid rgba(139,92,246,0.5)',
-                    boxShadow: '0 0 8px rgba(59,130,246,0.3)',
+                    background: '#3b82f6',
+                    border: '1px solid #2563eb',
                   } : {
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: '#ffffff',
+                    border: '1px solid #d1d5db',
                   }}
                   onClick={() => setForm(p => ({ ...p, is_midnight_rule: !p.is_midnight_rule }))}
                 >
@@ -368,7 +349,7 @@ export default function RulesPage() {
                     <span style={{ color: '#fff', fontSize: '10px', lineHeight: 1 }}>✓</span>
                   )}
                 </div>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <span className="text-xs" style={{ color: '#6b7280' }}>
                   00시 일일 규칙 — 자정에 우선 실행되는 일일 규칙
                 </span>
               </label>
@@ -381,9 +362,9 @@ export default function RulesPage() {
               onClick={handleSave}
               className="px-5 py-2 rounded-lg text-sm font-medium transition-all duration-150"
               style={{
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                background: '#3b82f6',
                 color: '#fff',
-                boxShadow: '0 0 16px rgba(59,130,246,0.25)',
+                boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
               }}
             >
               저장
@@ -392,9 +373,9 @@ export default function RulesPage() {
               onClick={() => { setShowForm(false); setEditing(null) }}
               className="px-4 py-2 rounded-lg text-sm transition-all duration-150"
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'rgba(255,255,255,0.5)',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                color: '#6b7280',
               }}
             >
               취소
@@ -407,14 +388,14 @@ export default function RulesPage() {
       <div
         className="rounded-xl overflow-hidden"
         style={{
-          background: 'rgba(17,17,24,0.6)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          backdropFilter: 'blur(12px)',
+          background: '#ffffff',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
         }}
       >
         {rules.length === 0 ? (
           <div className="px-6 py-16 text-center">
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <p className="text-sm" style={{ color: '#9ca3af' }}>
               등록된 규칙이 없습니다
             </p>
           </div>
@@ -422,12 +403,12 @@ export default function RulesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
                   {['규칙명', '범위', '상품필터', '조건', '액션', '심각도', '시간대', '상태', ''].map(h => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-xs font-medium"
-                      style={{ color: 'rgba(255,255,255,0.3)' }}
+                      style={{ color: '#6b7280' }}
                     >
                       {h}
                     </th>
@@ -440,21 +421,21 @@ export default function RulesPage() {
                   return (
                     <tr
                       key={r.id}
-                      className="transition-colors duration-150 hover:bg-white/[0.02]"
+                      className="transition-colors duration-150 hover:bg-gray-50"
                       style={{
-                        borderBottom: i < rules.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                        opacity: r.is_active ? 1 : 0.35,
+                        borderBottom: i < rules.length - 1 ? '1px solid #f3f4f6' : 'none',
+                        opacity: r.is_active ? 1 : 0.45,
                       }}
                     >
-                      <td className="px-4 py-3 font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                      <td className="px-4 py-3 font-medium" style={{ color: '#111827' }}>
                         <div className="flex items-center gap-1.5">
                           {r.is_midnight_rule && (
                             <span
                               className="text-xs px-1.5 py-0.5 rounded font-medium shrink-0"
                               style={{
-                                background: 'rgba(99,102,241,0.15)',
-                                border: '1px solid rgba(99,102,241,0.25)',
-                                color: '#a5b4fc',
+                                background: '#eef2ff',
+                                border: '1px solid #c7d2fe',
+                                color: '#6366f1',
                               }}
                             >
                               00시
@@ -467,22 +448,22 @@ export default function RulesPage() {
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
                           style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'rgba(255,255,255,0.45)',
+                            background: '#f3f4f6',
+                            color: '#6b7280',
                           }}
                         >
                           {r.scope ?? 'campaign'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                        {r.product_filter ?? <span style={{ color: 'rgba(255,255,255,0.18)' }}>전체</span>}
+                      <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
+                        {r.product_filter ?? <span style={{ color: '#9ca3af' }}>전체</span>}
                       </td>
-                      <td className="px-4 py-3 text-xs font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      <td className="px-4 py-3 text-xs font-mono" style={{ color: '#374151' }}>
                         {r.threshold_type === 'product_cpa'
                           ? `${r.metric} ${r.operator} 목표×${r.threshold_multiplier}`
                           : `${r.metric} ${r.operator} ${r.threshold}`}
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      <td className="px-4 py-3 text-xs" style={{ color: '#374151' }}>
                         {r.action}
                       </td>
                       <td className="px-4 py-3">
@@ -493,32 +474,31 @@ export default function RulesPage() {
                               background: sev.bg,
                               border: `1px solid ${sev.border}`,
                               color: sev.color,
-                              boxShadow: sev.glow,
                             }}
                           >
                             {r.severity}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-500">{r.severity}</span>
+                          <span className="text-xs" style={{ color: '#6b7280' }}>{r.severity}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
                         {r.time_start != null && r.time_end != null
                           ? `${r.time_start}~${r.time_end}시`
-                          : <span style={{ color: 'rgba(255,255,255,0.18)' }}>전체</span>}
+                          : <span style={{ color: '#9ca3af' }}>전체</span>}
                       </td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleToggle(r.id, r.is_active)}
                           className="text-xs px-2.5 py-1 rounded-md font-medium transition-all duration-150"
                           style={r.is_active ? {
-                            background: 'rgba(16,185,129,0.1)',
-                            border: '1px solid rgba(16,185,129,0.2)',
-                            color: '#34d399',
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            color: '#16a34a',
                           } : {
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: 'rgba(255,255,255,0.3)',
+                            background: '#f3f4f6',
+                            border: '1px solid #e5e7eb',
+                            color: '#9ca3af',
                           }}
                         >
                           {r.is_active ? '활성' : '비활성'}
@@ -529,14 +509,14 @@ export default function RulesPage() {
                           <button
                             onClick={() => startEdit(r)}
                             className="text-xs transition-colors duration-150"
-                            style={{ color: '#60a5fa' }}
+                            style={{ color: '#3b82f6' }}
                           >
                             수정
                           </button>
                           <button
                             onClick={() => handleDelete(r.id)}
                             className="text-xs transition-colors duration-150"
-                            style={{ color: '#f87171' }}
+                            style={{ color: '#dc2626' }}
                           >
                             삭제
                           </button>

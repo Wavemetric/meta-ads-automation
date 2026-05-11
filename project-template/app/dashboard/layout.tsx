@@ -12,20 +12,20 @@ const NAV = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen" style={{ background: '#0a0a0f' }}>
+    <div className="flex min-h-screen" style={{ background: '#f5f7fa' }}>
       {/* Sidebar */}
       <aside
         className="w-56 shrink-0 flex flex-col"
         style={{
-          background: 'linear-gradient(180deg, #111118 0%, #0e0e15 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
+          background: '#ffffff',
+          borderRight: '1px solid #e5e7eb',
         }}
       >
         {/* Logo */}
-        <div className="px-5 py-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="px-5 py-6" style={{ borderBottom: '1px solid #e5e7eb' }}>
           <p
             className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: 'rgba(139,92,246,0.7)' }}
+            style={{ color: '#8b5cf6' }}
           >
             Meta Ads
           </p>
@@ -48,9 +48,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Link
               key={href}
               href={href}
-              className="block px-3 py-2.5 rounded-lg text-sm transition-all duration-200"
+              className="block px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-gray-100"
               style={{
-                color: 'rgba(156,163,175,1)',
+                color: '#6b7280',
               }}
             >
               <span className="nav-item-inner">{label}</span>
@@ -59,20 +59,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-4 space-y-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <div className="px-4 py-4 space-y-2" style={{ borderTop: '1px solid #e5e7eb' }}>
+          <p className="text-xs font-semibold" style={{ color: '#9ca3af' }}>
             자동 실행 주기
           </p>
-          <div className="space-y-1 text-xs" style={{ color: 'rgba(255,255,255,0.22)' }}>
+          <div className="space-y-1 text-xs" style={{ color: '#9ca3af' }}>
             <p>00시 — 일일 규칙 우선 실행</p>
             <p>매시 — 시간대별 규칙 실행</p>
           </div>
           <div
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md mt-1"
             style={{
-              background: 'rgba(234,179,8,0.07)',
-              border: '1px solid rgba(234,179,8,0.18)',
-              boxShadow: '0 0 10px rgba(234,179,8,0.06)',
+              background: '#fefce8',
+              border: '1px solid #fde68a',
             }}
           >
             <span style={{ color: '#eab308', fontSize: '8px', lineHeight: 1 }}>●</span>
@@ -82,7 +81,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto p-8" style={{ background: '#0a0a0f' }}>
+      <main className="flex-1 overflow-auto p-8" style={{ background: '#f5f7fa' }}>
         {children}
       </main>
     </div>
