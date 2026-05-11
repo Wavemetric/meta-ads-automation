@@ -59,74 +59,68 @@ export default async function ProductsPage() {
     <div className="space-y-5">
       <h1 className="text-xl font-bold" style={{ color: '#111827' }}>제품별 CPA 현황</h1>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {productStats.length === 0 ? (
-          <p className="text-sm text-center py-12" style={{ color: '#9ca3af' }}>제품 목표 CPA 데이터가 없습니다</p>
+          <p className="col-span-3 text-sm text-center py-12" style={{ color: '#9ca3af' }}>제품 목표 CPA 데이터가 없습니다</p>
         ) : (
           productStats.map(p => {
             const status = cpaStatus(p.current_cpa, p.target_cpa)
             const ratio = p.current_cpa != null ? (p.current_cpa / p.target_cpa) * 100 : null
             return (
-              <div key={p.product_name} className="bg-white border rounded-lg p-5" style={{ borderColor: '#e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h2 className="text-base font-semibold" style={{ color: '#111827' }}>{p.product_name}</h2>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${status.bg}`}>{status.label}</span>
-                    </div>
+              <div key={p.product_name} className="bg-white border rounded-xl p-4 flex flex-col gap-3" style={{ borderColor: '#e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                {/* 제품명 + 상태 */}
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-sm font-semibold leading-tight" style={{ color: '#111827' }}>{p.product_name}</h2>
+                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${status.bg}`}>{status.label}</span>
+                </div>
 
-                    {/* CPA 비교 바 */}
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1" style={{ color: '#6b7280' }}>
-                        <span>현재 CPA</span>
-                        <span>목표: ₩{p.target_cpa.toLocaleString('ko-KR')}</span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        {ratio != null && (
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              ratio <= 100 ? 'bg-green-500' : ratio <= 120 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${Math.min(ratio, 150)}%` }}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-6 text-sm">
-                      <div>
-                        <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>현재 CPA</p>
-                        <p className={`text-lg font-bold ${cpaColor(p.current_cpa, p.target_cpa)}`}>
-                          {p.current_cpa != null ? `₩${Math.round(p.current_cpa).toLocaleString('ko-KR')}` : '-'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>목표 CPA</p>
-                        <p className="text-lg font-bold" style={{ color: '#374151' }}>₩{p.target_cpa.toLocaleString('ko-KR')}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>오늘 지출</p>
-                        <p className="text-sm" style={{ color: '#374151' }}>₩{Math.round(p.total_spend).toLocaleString('ko-KR')}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>전환 수</p>
-                        <p className="text-sm" style={{ color: '#374151' }}>{p.total_conversions}건</p>
-                      </div>
-                      <div>
-                        <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>연결 광고세트</p>
-                        <p className="text-sm" style={{ color: '#6b7280' }}>{p.campaign_count}개</p>
-                      </div>
-                    </div>
+                {/* 현재 CPA 큰 숫자 + 목표 대비 % */}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-xs mb-0.5" style={{ color: '#9ca3af' }}>현재 CPA</p>
+                    <p className={`text-2xl font-bold ${cpaColor(p.current_cpa, p.target_cpa)}`}>
+                      {p.current_cpa != null ? `₩${Math.round(p.current_cpa).toLocaleString('ko-KR')}` : '-'}
+                    </p>
                   </div>
-
                   {ratio != null && (
-                    <div className="text-right shrink-0">
-                      <p className="text-xs mb-1" style={{ color: '#6b7280' }}>목표 대비</p>
-                      <p className={`text-2xl font-bold ${cpaColor(p.current_cpa, p.target_cpa)}`}>
-                        {Math.round(ratio)}%
-                      </p>
-                    </div>
+                    <p className={`text-lg font-bold ${cpaColor(p.current_cpa, p.target_cpa)}`}>
+                      {Math.round(ratio)}%
+                    </p>
                   )}
+                </div>
+
+                {/* 진행 바 */}
+                <div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#f3f4f6' }}>
+                    {ratio != null && (
+                      <div
+                        className={`h-full rounded-full ${ratio <= 100 ? 'bg-green-500' : ratio <= 120 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(ratio, 100)}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex justify-between text-xs mt-1" style={{ color: '#c4c9d4' }}>
+                    <span>0</span>
+                    <span>목표 ₩{p.target_cpa.toLocaleString('ko-KR')}</span>
+                  </div>
+                </div>
+
+                {/* 보조 지표 */}
+                <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: '1px solid #f3f4f6' }}>
+                  <div>
+                    <p className="text-xs" style={{ color: '#9ca3af' }}>지출</p>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>
+                      ₩{Math.round(p.total_spend / 1000)}k
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: '#9ca3af' }}>전환</p>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>{p.total_conversions}건</p>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: '#9ca3af' }}>세트</p>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>{p.campaign_count}개</p>
+                  </div>
                 </div>
               </div>
             )
