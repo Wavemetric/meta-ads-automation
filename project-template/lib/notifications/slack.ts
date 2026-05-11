@@ -32,7 +32,7 @@ export async function sendSlackAlert(item: ActionQueueItem) {
           { title: '감지 내용', value: item.proposed_change.reason, short: false },
           { title: '제안 액션', value: item.proposed_change.action, short: true },
         ],
-        actions: [{ type: 'button', text: '대시보드에서 확인', url: `${dashboardUrl}/dashboard/queue/${item.id}`, style: 'primary' }],
+        actions: [{ type: 'button', text: '대시보드에서 확인', url: `${dashboardUrl}/dashboard/queue`, style: 'primary' }],
       },
     ],
   }
