@@ -1,0 +1,22 @@
+name: 메타 광고 자동화 (매시간)
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 매시간 정각 (UTC 기준)
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 광고 성과 수집
+        run: |
+          curl -s -X GET "${{ secrets.DASHBOARD_URL }}/api/cron/collect" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail --show-error
+
+      - name: 규칙 엔진 실행
+        run: |
+          curl -s -X GET "${{ secrets.DASHBOARD_URL }}/api/cron/evaluate" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail --show-error

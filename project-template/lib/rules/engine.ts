@@ -133,7 +133,7 @@ export async function runRuleEngine() {
 
     // 삽입된 항목마다 Slack 알림 발송
     for (const item of inserted ?? []) {
-      await sendSlackAlert(item).catch(() => {})
+      await sendSlackAlert(item as any).catch(() => {})
     }
   }
 
