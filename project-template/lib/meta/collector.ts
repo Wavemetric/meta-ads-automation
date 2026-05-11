@@ -7,9 +7,12 @@ export function normalizeInsight(i: MetaInsight): SnapshotInsert {
   const spend = parseFloat(i.spend) || 0
   const impressions = parseInt(i.impressions) || 0
   const clicks = parseInt(i.clicks) || 0
-  const conversions = i.conversions?.find(c => c.action_type === 'purchase')
-    ? parseInt(i.conversions.find(c => c.action_type === 'purchase')!.value)
-    : (i.conversions?.[0]?.value ? parseInt(i.conversions[0].value) : 0)
+  const purchaseAction = i.actions?.find(
+    c => c.action_type === 'purchase' ||
+         c.action_type === 'offsite_conversion.fb_pixel_purchase' ||
+         c.action_type === 'omni_purchase'
+  )
+  const conversions = purchaseAction ? parseInt(purchaseAction.value) : 0
 
   const roas = i.purchase_roas?.[0]?.value ? parseFloat(i.purchase_roas[0].value) : 0
   const revenue = roas * spend

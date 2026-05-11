@@ -17,7 +17,7 @@ export type MetaInsight = {
   clicks: string
   ctr: string
   cpm: string
-  conversions?: Array<{ action_type: string; value: string }>
+  actions?: Array<{ action_type: string; value: string }>
   purchase_roas?: Array<{ action_type: string; value: string }>
   revenue?: string
 }
@@ -45,7 +45,7 @@ export async function fetchCampaignInsights(
   const fields = [
     'campaign_id', 'campaign_name', 'adset_id', 'adset_name',
     'spend', 'impressions', 'clicks', 'ctr', 'cpm',
-    'purchase_roas', 'conversions',
+    'purchase_roas', 'actions',
   ].join(',')
 
   const url = new URL(`${META_BASE}/${accountId}/insights`)
