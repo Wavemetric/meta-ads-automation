@@ -2,44 +2,89 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 const NAV = [
-  { href: '/dashboard',            label: 'KPI 모니터링' },
-  { href: '/dashboard/products',   label: '제품별 CPA' },
-  { href: '/dashboard/queue',      label: '승인 대기' },
-  { href: '/dashboard/rules',      label: '규칙 관리' },
-  { href: '/dashboard/creatives',  label: '소재 성과' },
-  { href: '/dashboard/logs',       label: '실행 이력' },
+  { href: '/dashboard',           label: 'KPI 모니터링' },
+  { href: '/dashboard/products',  label: '제품별 CPA' },
+  { href: '/dashboard/queue',     label: '승인 대기' },
+  { href: '/dashboard/rules',     label: '규칙 관리' },
+  { href: '/dashboard/creatives', label: '소재 성과' },
+  { href: '/dashboard/logs',      label: '실행 이력' },
 ]
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen">
-      {/* 사이드바 */}
-      <aside className="w-52 shrink-0 border-r border-gray-800 bg-gray-900 flex flex-col">
-        <div className="px-5 py-6 border-b border-gray-800">
-          <p className="text-xs text-gray-400 font-medium tracking-wider uppercase">Meta Ads</p>
-          <p className="text-sm font-bold text-white mt-0.5">자동화 대시보드</p>
+    <div className="flex min-h-screen" style={{ background: '#0a0a0f' }}>
+      {/* Sidebar */}
+      <aside
+        className="w-56 shrink-0 flex flex-col"
+        style={{
+          background: 'linear-gradient(180deg, #111118 0%, #0e0e15 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        {/* Logo */}
+        <div className="px-5 py-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <p
+            className="text-xs font-semibold tracking-widest uppercase"
+            style={{ color: 'rgba(139,92,246,0.7)' }}
+          >
+            Meta Ads
+          </p>
+          <p
+            className="text-base font-bold mt-1"
+            style={{
+              background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            자동화 대시보드
+          </p>
         </div>
+
+        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           {NAV.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="block px-3 py-2 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="block px-3 py-2.5 rounded-lg text-sm transition-all duration-200"
+              style={{
+                color: 'rgba(156,163,175,1)',
+              }}
             >
-              {label}
+              <span className="nav-item-inner">{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="px-4 py-3 border-t border-gray-800 text-xs text-gray-500">
-          <p className="font-medium text-gray-400 mb-1">자동 규칙 실행 주기</p>
-          <p>00시 — 일일 규칙 우선 실행</p>
-          <p>매시 — 시간대별 규칙 실행</p>
-          <p className="text-yellow-600 mt-1">모든 액션 승인 필요</p>
+
+        {/* Footer */}
+        <div className="px-4 py-4 space-y-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            자동 실행 주기
+          </p>
+          <div className="space-y-1 text-xs" style={{ color: 'rgba(255,255,255,0.22)' }}>
+            <p>00시 — 일일 규칙 우선 실행</p>
+            <p>매시 — 시간대별 규칙 실행</p>
+          </div>
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md mt-1"
+            style={{
+              background: 'rgba(234,179,8,0.07)',
+              border: '1px solid rgba(234,179,8,0.18)',
+              boxShadow: '0 0 10px rgba(234,179,8,0.06)',
+            }}
+          >
+            <span style={{ color: '#eab308', fontSize: '8px', lineHeight: 1 }}>●</span>
+            <span className="text-xs font-medium" style={{ color: '#ca8a04' }}>모든 액션 승인 필요</span>
+          </div>
         </div>
       </aside>
 
-      {/* 메인 콘텐츠 */}
-      <main className="flex-1 overflow-auto p-6">{children}</main>
+      {/* Main */}
+      <main className="flex-1 overflow-auto p-8" style={{ background: '#0a0a0f' }}>
+        {children}
+      </main>
     </div>
   )
 }

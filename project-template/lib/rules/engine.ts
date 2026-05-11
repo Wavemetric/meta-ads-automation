@@ -117,6 +117,7 @@ export async function runRuleEngine() {
           reason: `[${rule.name}] ${rule.metric} ${metricValue} ${rule.operator} ${effectiveThreshold}${productTargetCpa ? ` (상품 목표 CPA: ${productTargetCpa}원)` : ''}`,
           proposed_budget: proposedBudget,
           is_midnight_rule: !!rule.is_midnight_rule,
+          adset_name: snapshot.adset_name,
         },
         // 모든 액션은 자동 실행 없이 pending
         status: 'pending',

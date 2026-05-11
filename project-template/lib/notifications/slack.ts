@@ -9,6 +9,7 @@ interface ActionQueueItem {
     threshold: number
     reason: string
     proposed_budget?: number | null
+    adset_name?: string | null
   }
 }
 
@@ -26,7 +27,7 @@ export async function sendSlackAlert(item: ActionQueueItem) {
       {
         color,
         fields: [
-          { title: '캠페인', value: item.campaign_name ?? '(알 수 없음)', short: true },
+          { title: '광고세트', value: item.proposed_change.adset_name ?? item.campaign_name ?? '(알 수 없음)', short: false },
           { title: '심각도', value: item.severity.toUpperCase(), short: true },
           { title: '감지 내용', value: item.proposed_change.reason, short: false },
           { title: '제안 액션', value: item.proposed_change.action, short: true },
