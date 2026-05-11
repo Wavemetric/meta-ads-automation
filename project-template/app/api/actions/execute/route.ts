@@ -1,47 +1,8 @@
-import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/client'
-import { executeAction } from '@/lib/meta/executor'
-import type { ProposedChange } from '@/lib/supabase/types'
-
-export async function POST(req: NextRequest) {
-  // Cron Secret 또는 내부 호출 검증
-  const authHeader = req.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const supabase = createClient()
-
-  const { data: items, error } = await supabase
-    .from('action_queue')
-    .select('*')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: true })
-    .limit(20)
-
-  if (error) return Response.json({ error: error.message }, { status: 500 })
-  if (!items?.length) return Response.json({ executed: 0 })
-
-  const results = []
-  for (const item of items) {
-    const change = item.proposed_change as unknown as ProposedChange
-
-    const { result, response, error: execError } = await executeAction(item.campaign_id, change)
-
-    await supabase
-      .from('action_queue')
-      .update({ status: result === 'success' ? 'executed' : 'failed' })
-      .eq('id', item.id)
-
-    await supabase.from('execution_log').insert({
-      action_queue_id: item.id,
-      meta_api_response: response as never,
-      result,
-      error_message: execError ?? null,
-    })
-
-    results.push({ id: item.id, result })
-  }
-
-  return Response.json({ executed: results.length, results })
+// 실행 기능 비활성화 — 현재는 알림/확인 기능만 운영
+// Meta API 실행은 별도 승인 프로세스 구축 후 활성화 예정
+export async function POST() {
+  return Response.json(
+    { error: '실행 기능이 비활성화되어 있습니다. 현재는 Slack 알림 및 대시보드 확인 기능만 운영 중입니다.' },
+    { status: 403 }
+  )
 }

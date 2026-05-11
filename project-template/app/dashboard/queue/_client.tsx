@@ -132,7 +132,7 @@ export default function QueuePage() {
                     onClick={() => handleApprove(item.id)}
                     className="flex-1 text-sm py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
                   >
-                    승인 & 즉시 실행
+                    확인 (실행 보류)
                   </button>
                   <button
                     onClick={() => handleReject(item.id)}

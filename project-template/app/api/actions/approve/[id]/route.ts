@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/client'
-import { executeAction } from '@/lib/meta/executor'
-import type { ProposedChange } from '@/lib/supabase/types'
 
 export async function POST(
   req: NextRequest,
@@ -24,27 +22,11 @@ export async function POST(
     return Response.json({ error: 'Queue item not found or already processed' }, { status: 404 })
   }
 
-  // 승인 처리
+  // 확인 처리만 (실행 없음 — 실행 기능은 별도 승인 후 활성화 예정)
   await supabase
     .from('action_queue')
     .update({ status: 'approved', approved_by: approvedBy })
     .eq('id', id)
 
-  // 즉시 실행
-  const change = item.proposed_change as unknown as ProposedChange
-  const { result, response, error: execError } = await executeAction(item.campaign_id, change)
-
-  await supabase
-    .from('action_queue')
-    .update({ status: result === 'success' ? 'executed' : 'failed' })
-    .eq('id', id)
-
-  await supabase.from('execution_log').insert({
-    action_queue_id: id,
-    meta_api_response: response as never,
-    result,
-    error_message: execError ?? null,
-  })
-
-  return Response.json({ id, result, error: execError })
+  return Response.json({ id, result: 'approved' })
 }

@@ -40,3 +40,5 @@ build/
 # 로그
 *.log
 logs/
+!app/dashboard/logs/
+.vercel
