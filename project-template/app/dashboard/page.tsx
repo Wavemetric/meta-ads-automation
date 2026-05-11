@@ -14,24 +14,29 @@ function badge(severity: string) {
 export const revalidate = 0
 
 export default async function DashboardPage() {
-  const supabase = createClient()
+  let snapshots: any[] = []
+  let queue: any[] = []
 
-  const [snapshotsRes, queueRes] = await Promise.all([
-    supabase
-      .from('campaigns_snapshot')
-      .select('*')
-      .order('captured_at', { ascending: false })
-      .limit(200),
-    supabase
-      .from('action_queue')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(10),
-  ])
-
-  const snapshots = snapshotsRes.data ?? []
-  const queue = queueRes.data ?? []
+  try {
+    const supabase = createClient()
+    const [snapshotsRes, queueRes] = await Promise.all([
+      supabase
+        .from('campaigns_snapshot')
+        .select('*')
+        .order('captured_at', { ascending: false })
+        .limit(200),
+      supabase
+        .from('action_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ])
+    snapshots = snapshotsRes.data ?? []
+    queue = queueRes.data ?? []
+  } catch {
+    // Supabase 미연결 시 빈 데이터로 UI 표시
+  }
 
   // 캠페인별 최신 스냅샷
   const latestByCampaign = new Map<string, typeof snapshots[0]>()

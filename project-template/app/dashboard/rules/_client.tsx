@@ -24,6 +24,9 @@ const EMPTY: Omit<AutomationRule, 'id' | 'created_at' | 'updated_at'> = {
   name: '', description: '', metric: 'cpa', operator: 'gt',
   threshold: 0, action: 'decrease_budget', action_value: null,
   severity: 'medium', scope: 'campaign', is_active: true,
+  product_filter: null, campaign_type_filter: null,
+  time_start: null, time_end: null,
+  is_midnight_rule: null, threshold_type: null, threshold_multiplier: null,
 }
 
 export default function RulesPage() {
@@ -65,12 +68,9 @@ export default function RulesPage() {
 
   function startEdit(rule: AutomationRule) {
     setEditing(rule.id)
-    setForm({
-      name: rule.name, description: rule.description ?? '', metric: rule.metric,
-      operator: rule.operator, threshold: rule.threshold, action: rule.action,
-      action_value: rule.action_value, severity: rule.severity,
-      scope: rule.scope, is_active: rule.is_active,
-    })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, created_at, updated_at, ...rest } = rule
+    setForm({ ...rest, description: rest.description ?? '' })
     setShowForm(true)
   }
 

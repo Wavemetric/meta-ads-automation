@@ -72,6 +72,13 @@ export interface Database {
           is_active: boolean
           created_at: string
           updated_at: string
+          product_filter: string | null
+          campaign_type_filter: string | null
+          time_start: number | null
+          time_end: number | null
+          is_midnight_rule: boolean | null
+          threshold_type: string | null
+          threshold_multiplier: number | null
         }
         Insert: {
           id?: string
@@ -87,6 +94,13 @@ export interface Database {
           is_active?: boolean
           created_at?: string
           updated_at?: string
+          product_filter?: string | null
+          campaign_type_filter?: string | null
+          time_start?: number | null
+          time_end?: number | null
+          is_midnight_rule?: boolean | null
+          threshold_type?: string | null
+          threshold_multiplier?: number | null
         }
         Update: {
           id?: string
@@ -102,6 +116,37 @@ export interface Database {
           is_active?: boolean
           created_at?: string
           updated_at?: string
+          product_filter?: string | null
+          campaign_type_filter?: string | null
+          time_start?: number | null
+          time_end?: number | null
+          is_midnight_rule?: boolean | null
+          threshold_type?: string | null
+          threshold_multiplier?: number | null
+        }
+        Relationships: []
+      }
+      product_target_cpas: {
+        Row: {
+          id: string
+          product_name: string
+          target_cpa: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_name: string
+          target_cpa: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_name?: string
+          target_cpa?: number
+          is_active?: boolean
+          created_at?: string
         }
         Relationships: []
       }
@@ -260,6 +305,7 @@ export type AutomationRule = Database['public']['Tables']['automation_rules']['R
 export type ActionQueue = Database['public']['Tables']['action_queue']['Row']
 export type ExecutionLog = Database['public']['Tables']['execution_log']['Row']
 export type Creative = Database['public']['Tables']['creatives']['Row']
+export type ProductTargetCpa = Database['public']['Tables']['product_target_cpas']['Row']
 
 export type ProposedChange = {
   action: string
@@ -268,4 +314,6 @@ export type ProposedChange = {
   threshold: number
   reason: string
   proposed_budget?: number | null
+  product_target_cpa?: number | null
+  is_midnight_rule?: boolean
 }

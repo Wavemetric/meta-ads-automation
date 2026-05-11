@@ -29,6 +29,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        <div className="px-4 py-3 border-t border-gray-800 text-xs text-gray-500">
+          <p className="font-medium text-gray-400 mb-1">자동 규칙 실행 주기</p>
+          <p>00시 — 일일 규칙 우선 실행</p>
+          <p>매시 — 시간대별 규칙 실행</p>
+          <p className="text-yellow-600 mt-1">모든 액션 승인 필요</p>
+        </div>
       </aside>
 
       {/* 메인 콘텐츠 */}

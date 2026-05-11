@@ -9,12 +9,18 @@ function fatigueColor(score: number) {
 }
 
 export default async function CreativesPage() {
-  const supabase = createClient()
-  const { data: creatives } = await supabase
-    .from('creatives')
-    .select('*')
-    .order('fatigue_score', { ascending: false })
-    .limit(100)
+  let creatives: any[] | null = null
+  try {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('creatives')
+      .select('*')
+      .order('fatigue_score', { ascending: false })
+      .limit(100)
+    creatives = data
+  } catch {
+    // Supabase 미연결 시 빈 화면 표시
+  }
 
   return (
     <div className="space-y-5">

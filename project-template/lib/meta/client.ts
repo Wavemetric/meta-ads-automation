@@ -59,8 +59,12 @@ export async function fetchCampaignInsights(
 }
 
 // 모든 광고 계정 인사이트 통합 수집
+// META_AD_ACCOUNT_IDS 환경변수 우선 사용 (쉼표 구분), 없으면 AD_ACCOUNTS 폴백
 export async function fetchAllAccountInsights(datePreset = 'today'): Promise<MetaInsight[]> {
-  const accountIds = Object.values(AD_ACCOUNTS)
+  const envIds = process.env.META_AD_ACCOUNT_IDS
+  const accountIds = envIds
+    ? envIds.split(',').map(s => s.trim()).filter(Boolean)
+    : Object.values(AD_ACCOUNTS)
   const results = await Promise.allSettled(
     accountIds.map(id => fetchCampaignInsights(id, datePreset))
   )

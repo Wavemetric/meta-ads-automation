@@ -102,7 +102,14 @@ export default function QueuePage() {
                   {item.severity.toUpperCase()}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{item.campaign_name ?? item.campaign_id}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-white truncate">{item.campaign_name ?? item.campaign_id}</p>
+                    {change.is_midnight_rule && (
+                      <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-medium">
+                        00시 규칙
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-400 mt-0.5">{change.reason}</p>
                   <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
                     <span>액션: <span className="text-gray-300">{change.action}</span></span>
