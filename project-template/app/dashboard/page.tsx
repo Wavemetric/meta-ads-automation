@@ -129,9 +129,12 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
                   />
                 )}
               </div>
-              {ratio != null && (
+              {ratio != null && g.targetCpa != null && g.currentCpa != null && (
                 <p className="text-xs mt-1.5 text-right font-semibold" style={{ color: status.color }}>
-                  목표 대비 {Math.round(ratio)}%
+                  {g.currentCpa > g.targetCpa
+                    ? `목표 대비 ₩${Math.round(g.currentCpa - g.targetCpa).toLocaleString('ko-KR')} 초과 (${Math.round(ratio - 100)}%)`
+                    : `목표 대비 ₩${Math.round(g.targetCpa - g.currentCpa).toLocaleString('ko-KR')} 준수 (${Math.round(100 - ratio)}%)`
+                  }
                 </p>
               )}
             </div>
