@@ -49,20 +49,9 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
 
   return (
     <div
-      className="bg-white rounded-xl flex flex-col overflow-hidden"
+      className="cpa-card bg-white rounded-xl flex flex-col overflow-hidden"
       style={{
         boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)',
-        transition: 'transform 200ms, box-shadow 200ms',
-      }}
-      onMouseEnter={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.transform = 'translateY(-2px)'
-        el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 16px 32px rgba(0,0,0,0.06)'
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.transform = 'translateY(0)'
-        el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)'
       }}
     >
       {/* 상단 그라디언트 띠 */}
@@ -176,21 +165,10 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
         href={metaUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-all duration-200"
+        className="meta-link flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium"
         style={{
           borderTop: '1px solid #f4f4f5',
           color: '#a1a1aa',
-          background: 'transparent',
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement
-          el.style.background = '#fafafa'
-          el.style.color = '#6366f1'
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement
-          el.style.background = 'transparent'
-          el.style.color = '#a1a1aa'
         }}
       >
         메타 광고 관리자에서 보기
