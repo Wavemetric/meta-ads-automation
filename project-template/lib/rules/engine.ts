@@ -126,15 +126,19 @@ export async function runRuleEngine() {
   }
 
   if (queueItems.length > 0) {
-    const { data: inserted, error } = await supabase
-      .from('action_queue')
-      .insert(queueItems)
-      .select()
+    const { error } = await supabase.from('action_queue').insert(queueItems)
     if (error) throw error
-
-    // 이번 실행 결과를 Slack에 1개 요약 메시지로 발송
-    await sendSlackSummary((inserted ?? []) as any[]).catch(() => {})
   }
+
+  // 새 항목 유무와 관계없이 현재 pending 전체를 Slack에 요약 발송
+  const { data: allPending } = await supabase
+    .from('action_queue')
+    .select('*')
+    .eq('status', 'pending')
+    .order('severity', { ascending: true }) // high → medium → low
+    .limit(50)
+
+  await sendSlackSummary((allPending ?? []) as any[]).catch(() => {})
 
   return { evaluated: latestByAdset.size, queued: queueItems.length, kstHour, midnightRun }
 }
