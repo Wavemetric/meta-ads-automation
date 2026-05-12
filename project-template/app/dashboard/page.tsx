@@ -51,13 +51,6 @@ const STATUS_EMOJI: Record<ProductStatus, string> = {
   '데이터없음': '⬜',
 }
 
-function severityBadge(severity: string) {
-  if (severity === 'high')
-    return { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' }
-  if (severity === 'medium')
-    return { bg: '#fefce8', border: '#fde68a', color: '#ca8a04' }
-  return { bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a' }
-}
 
 export default async function DashboardPage() {
   let snapshots: any[] = []
@@ -359,7 +352,6 @@ export default async function DashboardPage() {
           <div>
             {pendingQueue.slice(0, 3).map((item, i) => {
               const change = item.proposed_change as { reason?: string; action?: string }
-              const badge = severityBadge(item.severity)
               return (
                 <div
                   key={item.id}
@@ -371,16 +363,6 @@ export default async function DashboardPage() {
                         : 'none',
                   }}
                 >
-                  <span
-                    className="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={{
-                      background: badge.bg,
-                      border: `1px solid ${badge.border}`,
-                      color: badge.color,
-                    }}
-                  >
-                    {item.severity}
-                  </span>
                   <span className="text-sm truncate" style={{ color: '#374151' }}>
                     {item.campaign_name}
                   </span>

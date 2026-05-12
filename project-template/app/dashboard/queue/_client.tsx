@@ -4,12 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { createBrowserClient } from '@/lib/supabase/browser'
 import type { ActionQueue, ProposedChange } from '@/lib/supabase/types'
 
-const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string; glow: string }> = {
-  high:   { bg: '#fef2f2', border: '#fecaca', color: '#dc2626', glow: 'none' },
-  medium: { bg: '#fefce8', border: '#fde68a', color: '#ca8a04', glow: 'none' },
-  low:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a', glow: 'none' },
-}
-
 const STATUS_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   pending:  { color: '#ca8a04', bg: '#fefce8', border: '#fde68a' },
   approved: { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -142,7 +136,6 @@ export default function QueuePage() {
       <div className="space-y-3">
         {items.map(item => {
           const change = item.proposed_change as unknown as ProposedChange
-          const sev = SEVERITY_STYLE[item.severity] ?? SEVERITY_STYLE.low
           const stat = STATUS_STYLE[item.status] ?? STATUS_STYLE.pending
           return (
             <div
@@ -155,18 +148,6 @@ export default function QueuePage() {
               }}
             >
               <div className="flex items-start gap-3">
-                {/* Severity badge */}
-                <span
-                  className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold mt-0.5"
-                  style={{
-                    background: sev.bg,
-                    border: `1px solid ${sev.border}`,
-                    color: sev.color,
-                  }}
-                >
-                  {item.severity.toUpperCase()}
-                </span>
-
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

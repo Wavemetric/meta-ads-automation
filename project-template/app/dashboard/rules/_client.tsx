@@ -729,7 +729,7 @@ export default function RulesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                    {['규칙명', '범위', '상품필터', '조건', '액션', '심각도', '시간대', '상태', ''].map(h => (
+                    {['규칙명', '범위', '상품필터', '조건', '액션', '시간대', '상태', ''].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#6b7280' }}>
                         {h}
                       </th>
@@ -738,7 +738,6 @@ export default function RulesPage() {
                 </thead>
                 <tbody>
                   {filteredRules.map((r, i) => {
-                    const sev = SEVERITY_STYLE[r.severity]
                     return (
                       <tr
                         key={r.id}
@@ -775,18 +774,6 @@ export default function RulesPage() {
                             : `${r.metric} ${r.operator} ${r.threshold}`}
                         </td>
                         <td className="px-4 py-3 text-xs" style={{ color: '#374151' }}>{r.action}</td>
-                        <td className="px-4 py-3">
-                          {sev ? (
-                            <span
-                              className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: sev.bg, border: `1px solid ${sev.border}`, color: sev.color }}
-                            >
-                              {r.severity}
-                            </span>
-                          ) : (
-                            <span className="text-xs" style={{ color: '#6b7280' }}>{r.severity}</span>
-                          )}
-                        </td>
                         <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
                           {r.time_start != null && r.time_end != null
                             ? `${r.time_start}~${r.time_end}시`
