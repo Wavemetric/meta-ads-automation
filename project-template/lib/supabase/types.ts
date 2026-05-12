@@ -347,4 +347,5 @@ export type ProposedChange = {
   product_target_cpa?: number | null
   is_midnight_rule?: boolean
   adset_name?: string | null
+  rule_name?: string | null
 }

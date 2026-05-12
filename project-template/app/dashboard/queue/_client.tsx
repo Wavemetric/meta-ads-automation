@@ -14,6 +14,28 @@ function getMetricLabel(metric: string) {
   return ({ cpa: 'CPA', roas: 'ROAS', ctr: 'CTR', spend: '일 지출' } as Record<string, string>)[metric] ?? metric.toUpperCase()
 }
 
+function getActionShortLabel(action: string): string {
+  return ({
+    decrease_budget: '예산 감축',
+    increase_budget: '예산 증액',
+    pause: '캠페인 정지',
+    resume: '캠페인 재개',
+    replace_creative: '소재 교체',
+    set_budget_yesterday: '전일 예산',
+    set_budget_yesterday_50pct: '전일 50%',
+    set_budget_yesterday_70pct: '전일 70%',
+    set_budget_current: '예산 유지',
+  } as Record<string, string>)[action] ?? action
+}
+
+function getActionColor(action: string): { color: string; bg: string; border: string } {
+  if (['pause', 'decrease_budget', 'set_budget_yesterday_50pct', 'set_budget_yesterday_70pct'].includes(action))
+    return { color: '#dc2626', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' }
+  if (['resume', 'increase_budget'].includes(action))
+    return { color: '#059669', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' }
+  return { color: '#6366f1', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)' }
+}
+
 function fmtMetric(metric: string, value: number) {
   if (['cpa', 'spend'].includes(metric)) return `₩${Math.round(value).toLocaleString('ko-KR')}`
   if (metric === 'roas') return `${(value * 100).toFixed(0)}%`
@@ -89,9 +111,10 @@ function PendingCard({
   const change = item.proposed_change as unknown as ProposedChange
   const entity = getEntityLabel(change, item)
   const over = isOverThreshold(change)
-  const isBudgetAction = ['decrease_budget', 'increase_budget', 'set_budget_yesterday',
-    'set_budget_yesterday_50pct', 'set_budget_yesterday_70pct', 'set_budget_current'].includes(change.action)
-  const isToggleAction = change.action === 'pause' || change.action === 'resume'
+  const isBudgetAction = BUDGET_ACTIONS.has(change.action)
+  const isToggleAction = TOGGLE_ACTIONS.has(change.action)
+  const ruleName = change.rule_name ?? change.reason?.match(/^\[([^\]]+)\]/)?.[1] ?? null
+  const actionColor = getActionColor(change.action)
 
   return (
     <div
@@ -101,63 +124,44 @@ function PendingCard({
         boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)',
       }}
     >
-      {/* 헤더 */}
-      <div
-        className="px-4 py-3 flex items-center gap-2"
-        style={{ borderBottom: '1px solid #f4f4f5' }}
-      >
+      {/* ① 뱃지 스트립 — 맥락 정보, 작게 */}
+      <div className="px-4 pt-3 pb-0 flex items-center gap-1.5">
         <span
-          className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
+          className="text-xs font-semibold px-1.5 py-0.5 rounded-full"
           style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}
         >
           {entity.type}
         </span>
-        <p className="flex-1 text-sm font-bold truncate min-w-0" style={{ color: '#0f0f11' }}>{entity.name}</p>
         {change.is_midnight_rule && (
           <span
-            className="text-xs px-1.5 py-0.5 rounded-full font-semibold shrink-0"
-            style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}
+            className="text-xs px-1.5 py-0.5 rounded-full"
+            style={{ background: 'rgba(99,102,241,0.06)', color: '#818cf8' }}
           >
             자정
           </span>
         )}
+        <div className="flex-1" />
         <span
-          className="shrink-0 text-xs px-2 py-0.5 rounded-full font-semibold"
+          className="text-xs px-2 py-0.5 rounded-full font-semibold"
           style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706' }}
         >
           검토 필요
         </span>
       </div>
 
-      {/* 본문: 2열 */}
-      <div className="p-4 grid grid-cols-2 gap-3">
-        {/* 왼쪽: 감지된 상태 */}
-        <div className="rounded-lg p-3" style={{ background: '#f9f9f9', border: '1px solid #f0f0f0' }}>
-          <p className="text-xs font-semibold mb-1.5" style={{ color: '#a1a1aa' }}>감지된 상태</p>
-          <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#3f3f46' }}>
-            {getStatusSentence(change)}
-          </p>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span
-              className="text-xs font-bold px-2 py-1 rounded-lg"
-              style={{ background: '#ebebeb', color: '#71717a' }}
-            >
-              목표 {fmtMetric(change.metric, change.threshold)}
-            </span>
-            <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
-            <span
-              className="text-xs font-bold px-2 py-1 rounded-lg"
-              style={{
-                background: over ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-                color: over ? '#dc2626' : '#059669',
-              }}
-            >
-              현재 {fmtMetric(change.metric, change.current_value)}
-            </span>
-          </div>
-        </div>
+      {/* ② 캠페인명 — 가장 먼저 눈에 들어오는 PRIMARY 정보 */}
+      <div className="px-4 pt-2 pb-3">
+        <p
+          className="font-black truncate"
+          style={{ fontSize: '17px', color: '#0f0f11', letterSpacing: '-0.01em', lineHeight: 1.3 }}
+        >
+          {entity.name}
+        </p>
+      </div>
 
-        {/* 오른쪽: 추천 조치 */}
+      {/* ③ 본문: 2열 — 감지된 상태 / 추천 조치 */}
+      <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+        {/* 왼쪽: 현재 수치 — 핵심 숫자를 크게 */}
         <div
           className="rounded-lg p-3"
           style={{
@@ -165,31 +169,58 @@ function PendingCard({
             border: `1px solid ${over ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)'}`,
           }}
         >
-          <p className="text-xs font-semibold mb-1.5" style={{ color: '#a1a1aa' }}>추천 조치</p>
-          <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#3f3f46' }}>
-            {getActionSentence(change, entity.type)}
+          <p className="text-xs mb-1.5" style={{ color: '#a1a1aa' }}>{getMetricLabel(change.metric)}</p>
+          <p
+            className="font-black"
+            style={{
+              fontSize: '22px',
+              color: over ? '#dc2626' : '#059669',
+              letterSpacing: '-0.03em',
+              lineHeight: 1,
+            }}
+          >
+            {fmtMetric(change.metric, change.current_value)}
           </p>
+          <p className="text-xs mt-2" style={{ color: '#a1a1aa' }}>
+            목표 {fmtMetric(change.metric, change.threshold)}
+          </p>
+        </div>
+
+        {/* 오른쪽: 추천 조치 */}
+        <div className="rounded-lg p-3" style={{ background: '#f9f9f9', border: '1px solid #f0f0f0' }}>
+          <p className="text-xs mb-1.5" style={{ color: '#a1a1aa' }}>추천 조치</p>
+          <span
+            className="text-sm font-black px-2.5 py-1 rounded-lg inline-block"
+            style={{
+              background: actionColor.bg,
+              border: `1px solid ${actionColor.border}`,
+              color: actionColor.color,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {getActionShortLabel(change.action)}
+          </span>
 
           {isBudgetAction && change.proposed_budget != null && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#ebebeb', color: '#71717a' }}>
-                실행 중
-              </span>
-              <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
-              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', color: '#059669' }}>
-                ₩{Math.round(change.proposed_budget).toLocaleString('ko-KR')}
-              </span>
-            </div>
+            <p
+              className="font-black mt-2"
+              style={{ fontSize: '16px', color: '#059669', letterSpacing: '-0.02em' }}
+            >
+              ₩{Math.round(change.proposed_budget).toLocaleString('ko-KR')}
+            </p>
           )}
 
           {isToggleAction && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#ebebeb', color: '#71717a' }}>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span
+                className="text-xs font-bold px-2 py-0.5 rounded"
+                style={{ background: '#ebebeb', color: '#71717a' }}
+              >
                 {change.action === 'pause' ? '실행 중' : '정지됨'}
               </span>
-              <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
+              <span className="text-xs" style={{ color: '#d4d4d8' }}>→</span>
               <span
-                className="text-xs font-bold px-2 py-1 rounded-lg"
+                className="text-xs font-bold px-2 py-0.5 rounded"
                 style={{
                   background: change.action === 'pause' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
                   color: change.action === 'pause' ? '#dc2626' : '#059669',
@@ -202,47 +233,76 @@ function PendingCard({
         </div>
       </div>
 
-      {/* 푸터 */}
+      {/* ④ 푸터 */}
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{ borderTop: '1px solid #f4f4f5' }}
       >
-        <span className="text-xs" style={{ color: '#d4d4d8' }}>{fmtDate(item.created_at)} KST</span>
+        <div className="flex items-center gap-2">
+          {/* [적용규칙] 호버 툴팁 */}
+          {ruleName && (
+            <div className="relative group">
+              <span
+                className="text-xs px-2 py-0.5 rounded cursor-default select-none"
+                style={{ background: '#f4f4f5', color: '#a1a1aa', border: '1px solid #e4e4e7' }}
+              >
+                적용규칙
+              </span>
+              <div
+                className="absolute bottom-full left-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none"
+                style={{ zIndex: 20 }}
+              >
+                <div
+                  className="text-xs font-semibold whitespace-nowrap px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: '#18181b',
+                    color: '#e4e4e7',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  {ruleName}
+                </div>
+              </div>
+            </div>
+          )}
+          <span className="text-xs" style={{ color: '#d4d4d8' }}>{fmtDate(item.created_at)} KST</span>
+        </div>
+
         <div className="flex gap-2">
-        <button
-          onClick={() => onReject(item.id)}
-          className="text-sm px-4 py-2 rounded-xl font-semibold transition-all duration-200"
-          style={{
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.2)',
-            color: '#dc2626',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.14)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)' }}
-        >
-          거절
-        </button>
-        <button
-          onClick={() => onApprove(item.id)}
-          className="text-sm px-5 py-2 rounded-xl font-semibold transition-all duration-200"
-          style={{
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#ffffff',
-            boxShadow: '0 2px 8px rgba(99,102,241,0.35)',
-          }}
-          onMouseEnter={e => {
-            const el = e.currentTarget as HTMLButtonElement
-            el.style.boxShadow = '0 4px 12px rgba(99,102,241,0.5)'
-            el.style.transform = 'translateY(-1px)'
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget as HTMLButtonElement
-            el.style.boxShadow = '0 2px 8px rgba(99,102,241,0.35)'
-            el.style.transform = 'translateY(0)'
-          }}
-        >
-          승인
-        </button>
+          <button
+            onClick={() => onReject(item.id)}
+            className="text-sm px-4 py-2 rounded-xl font-semibold transition-all duration-200"
+            style={{
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)',
+              color: '#dc2626',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.14)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)' }}
+          >
+            거절
+          </button>
+          <button
+            onClick={() => onApprove(item.id)}
+            className="text-sm px-5 py-2 rounded-xl font-semibold transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: '#ffffff',
+              boxShadow: '0 2px 8px rgba(99,102,241,0.35)',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.boxShadow = '0 4px 12px rgba(99,102,241,0.5)'
+              el.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.boxShadow = '0 2px 8px rgba(99,102,241,0.35)'
+              el.style.transform = 'translateY(0)'
+            }}
+          >
+            승인
+          </button>
         </div>
       </div>
     </div>
