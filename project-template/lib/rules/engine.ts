@@ -101,6 +101,9 @@ export async function runRuleEngine() {
 
       if ((count ?? 0) > 0) continue
 
+      // 현상유지 액션은 실제 조치가 없으므로 큐에 넣지 않음
+      if (rule.action === 'set_budget_current') continue
+
       const proposedBudget = calcProposedBudget(snapshot.spend, rule.action, rule.action_value)
 
       queueItems.push({
