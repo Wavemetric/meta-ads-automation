@@ -11,12 +11,12 @@ function getTodayKstUtcIso(): string {
 
 function cpaStatus(current: number | null, target: number | null) {
   if (current == null || target == null)
-    return { label: '목표 미설정', bg: '#f9fafb', border: '#e5e7eb', color: '#9ca3af', barColor: '#d1d5db' }
+    return { label: '목표 미설정', bg: '#f9fafb', border: 'rgba(0,0,0,0.06)', color: '#a1a1aa', barColor: '#e4e4e7', gradient: 'linear-gradient(90deg, #e4e4e7, #d4d4d8)' }
   if (current <= target)
-    return { label: '목표 달성', bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a', barColor: '#22c55e' }
+    return { label: '목표 달성', bg: '#f0fdf9', border: '#6ee7b7', color: '#059669', barColor: '#10b981', gradient: 'linear-gradient(90deg, #10b981, #34d399)' }
   if (current <= target * 1.2)
-    return { label: '주의', bg: '#fefce8', border: '#fde68a', color: '#ca8a04', barColor: '#f59e0b' }
-  return { label: '초과', bg: '#fef2f2', border: '#fecaca', color: '#dc2626', barColor: '#ef4444' }
+    return { label: '주의', bg: '#fffbeb', border: '#fcd34d', color: '#d97706', barColor: '#f59e0b', gradient: 'linear-gradient(90deg, #f59e0b, #fbbf24)' }
+  return { label: '초과', bg: '#fff1f2', border: '#fca5a5', color: '#dc2626', barColor: '#ef4444', gradient: 'linear-gradient(90deg, #ef4444, #f87171)' }
 }
 
 type CampaignGroup = {
@@ -37,6 +37,12 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
     : null
 
   const typeLabel = g.groupType === 'promotion' ? '프로모션' : g.groupType === 'product' ? '상품' : '캠페인'
+  const typeBg = g.groupType === 'promotion'
+    ? { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' }
+    : g.groupType === 'product'
+    ? { bg: 'rgba(139,92,246,0.1)', color: '#7c3aed' }
+    : { bg: 'rgba(113,113,122,0.1)', color: '#71717a' }
+
   const metaUrl = accountId
     ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${accountId}&selected_campaign_ids=${g.sampleCampaignId}`
     : 'https://adsmanager.facebook.com/'
@@ -44,78 +50,98 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
   return (
     <div
       className="bg-white rounded-xl flex flex-col overflow-hidden"
-      style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+      style={{
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)',
+        transition: 'transform 200ms, box-shadow 200ms',
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.transform = 'translateY(-2px)'
+        el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 16px 32px rgba(0,0,0,0.06)'
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.transform = 'translateY(0)'
+        el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)'
+      }}
     >
-      {/* 상단 색 띠 */}
-      <div className="h-1" style={{ background: status.barColor }} />
+      {/* 상단 그라디언트 띠 */}
+      <div className="h-1.5" style={{ background: status.gradient }} />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         {/* 그룹명 + 뱃지 */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <span
-              className="text-xs font-medium px-1.5 py-0.5 rounded"
-              style={{ background: g.groupType === 'promotion' ? '#f0f9ff' : '#f5f3ff', color: g.groupType === 'promotion' ? '#0284c7' : '#7c3aed' }}
+              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: typeBg.bg, color: typeBg.color }}
             >
               {typeLabel}
             </span>
-            <p className="text-sm font-bold mt-1 leading-snug" style={{ color: '#111827' }}>
+            <p className="text-sm font-bold mt-1.5 leading-snug" style={{ color: '#0f0f11' }}>
               {g.groupName}
             </p>
           </div>
           <span
-            className="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{ background: status.bg, border: `1px solid ${status.border}`, color: status.color }}
+            className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold"
+            style={{
+              background: status.bg,
+              border: `1px solid ${status.border}`,
+              color: status.color,
+              whiteSpace: 'nowrap',
+            }}
           >
             {status.label}
           </span>
         </div>
 
-        {/* 핵심 지표: 현재 CPA + 목표 CPA */}
+        {/* 핵심 지표 */}
         <div>
           <div className="flex items-end justify-between mb-3">
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: '#9ca3af' }}>현재 CPA</p>
+              <p className="text-xs font-medium mb-1.5" style={{ color: '#a1a1aa' }}>현재 CPA</p>
               <p
-                className="text-3xl font-bold leading-none"
-                style={{ color: g.currentCpa != null ? status.color : '#d1d5db' }}
+                className="font-black leading-none"
+                style={{
+                  fontSize: '32px',
+                  color: g.currentCpa != null ? status.color : '#d4d4d8',
+                  letterSpacing: '-0.02em',
+                }}
               >
                 {g.currentCpa != null
                   ? `₩${Math.round(g.currentCpa).toLocaleString('ko-KR')}`
-                  : '-'}
+                  : '–'}
               </p>
             </div>
             {g.targetCpa != null && (
               <div className="text-right">
-                <p className="text-xs font-medium mb-1" style={{ color: '#9ca3af' }}>목표 CPA</p>
-                <p className="text-lg font-semibold" style={{ color: '#6b7280' }}>
+                <p className="text-xs font-medium mb-1.5" style={{ color: '#a1a1aa' }}>목표 CPA</p>
+                <p className="text-lg font-bold" style={{ color: '#71717a' }}>
                   ₩{g.targetCpa.toLocaleString('ko-KR')}
                 </p>
               </div>
             )}
           </div>
 
-          {/* CPA 바 */}
           {g.targetCpa != null && (
             <div>
-              <div className="relative h-2 rounded-full overflow-hidden" style={{ background: '#f3f4f6' }}>
+              <div
+                className="relative h-2 rounded-full overflow-hidden"
+                style={{ background: '#f4f4f5' }}
+              >
                 {ratio != null && (
                   <div
-                    className="h-full rounded-full transition-all"
+                    className="h-full rounded-full"
                     style={{
                       width: `${Math.min(ratio, 100)}%`,
-                      background: status.barColor,
+                      background: status.gradient,
+                      transition: 'width 600ms cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                   />
                 )}
-                {/* 목표 마커 (100%) */}
-                <div
-                  className="absolute top-0 bottom-0 w-0.5"
-                  style={{ left: '100%', transform: 'translateX(-1px)', background: '#6b7280', opacity: 0.3 }}
-                />
               </div>
               {ratio != null && (
-                <p className="text-xs mt-1 text-right font-medium" style={{ color: status.color }}>
+                <p className="text-xs mt-1.5 text-right font-semibold" style={{ color: status.color }}>
                   목표 대비 {Math.round(ratio)}%
                 </p>
               )}
@@ -124,20 +150,23 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
         </div>
 
         {/* 보조 지표 */}
-        <div className="grid grid-cols-3 gap-2 pt-3" style={{ borderTop: '1px solid #f3f4f6' }}>
+        <div
+          className="grid grid-cols-3 gap-2 pt-3"
+          style={{ borderTop: '1px solid #f4f4f5' }}
+        >
           <div>
-            <p className="text-xs" style={{ color: '#9ca3af' }}>지출</p>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#374151' }}>
+            <p className="text-xs" style={{ color: '#a1a1aa' }}>지출</p>
+            <p className="text-xs font-bold mt-0.5" style={{ color: '#3f3f46' }}>
               ₩{Math.round(g.totalSpend / 1000).toLocaleString('ko-KR')}k
             </p>
           </div>
           <div>
-            <p className="text-xs" style={{ color: '#9ca3af' }}>전환</p>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#374151' }}>{g.totalConversions}건</p>
+            <p className="text-xs" style={{ color: '#a1a1aa' }}>전환</p>
+            <p className="text-xs font-bold mt-0.5" style={{ color: '#3f3f46' }}>{g.totalConversions}건</p>
           </div>
           <div>
-            <p className="text-xs" style={{ color: '#9ca3af' }}>세트</p>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#374151' }}>{g.campaignCount}개</p>
+            <p className="text-xs" style={{ color: '#a1a1aa' }}>세트</p>
+            <p className="text-xs font-bold mt-0.5" style={{ color: '#3f3f46' }}>{g.campaignCount}개</p>
           </div>
         </div>
       </div>
@@ -147,8 +176,22 @@ function CpaCard({ g, accountId }: { g: CampaignGroup; accountId: string }) {
         href={metaUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors hover:bg-gray-50"
-        style={{ borderTop: '1px solid #f3f4f6', color: '#6b7280' }}
+        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-all duration-200"
+        style={{
+          borderTop: '1px solid #f4f4f5',
+          color: '#a1a1aa',
+          background: 'transparent',
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = '#fafafa'
+          el.style.color = '#6366f1'
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = 'transparent'
+          el.style.color = '#a1a1aa'
+        }}
       >
         메타 광고 관리자에서 보기
         <span style={{ fontSize: '10px' }}>↗</span>
@@ -178,7 +221,6 @@ export default async function DashboardPage() {
     supabase.from('action_queue').select('status').gte('created_at', todayIso),
   ])
 
-  // 광고세트/캠페인별 최신 스냅샷만 유지
   const latestMap = new Map<string, NonNullable<typeof snapshotsRes.data>[number]>()
   for (const s of snapshotsRes.data ?? []) {
     const key = s.adset_name ?? s.campaign_name ?? s.campaign_id
@@ -189,16 +231,14 @@ export default async function DashboardPage() {
   const products = productRes.data ?? []
   const promotions = promotionRes.data ?? []
 
-  // 그룹 집계: 프로모션 → 제품 → 캠페인명 순으로 매칭
   const groupMap = new Map<string, CampaignGroup>()
 
   for (const s of latest) {
-    if ((s.spend ?? 0) === 0) continue // 지출 없으면 라이브 아님
+    if ((s.spend ?? 0) === 0) continue
 
     const name = (s.campaign_name ?? '').toLowerCase()
     let matched = false
 
-    // 1. 프로모션 매칭 우선
     for (const p of promotions) {
       if (name.includes(p.promotion_name.toLowerCase())) {
         const key = `promo::${p.promotion_name}`
@@ -225,7 +265,6 @@ export default async function DashboardPage() {
 
     if (matched) continue
 
-    // 2. 제품 매칭
     for (const p of products) {
       if (name.includes(p.product_name.toLowerCase())) {
         const key = `prod::${p.product_name}`
@@ -252,7 +291,6 @@ export default async function DashboardPage() {
 
     if (matched) continue
 
-    // 3. 매칭 없으면 캠페인명으로 단독 표시
     const key = `camp::${s.campaign_id}`
     if (!groupMap.has(key)) {
       groupMap.set(key, {
@@ -272,7 +310,6 @@ export default async function DashboardPage() {
     g.campaignCount++
   }
 
-  // 현재 CPA 계산 + 정렬 (초과 → 주의 → 달성 → 목표없음)
   const groups: CampaignGroup[] = Array.from(groupMap.values())
     .map(g => ({
       ...g,
@@ -298,18 +335,28 @@ export default async function DashboardPage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>대시보드</h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <h1
+            className="font-black"
+            style={{ fontSize: '26px', color: '#0f0f11', letterSpacing: '-0.02em' }}
+          >
+            대시보드
+          </h1>
+          <p className="text-sm mt-1" style={{ color: '#a1a1aa' }}>
             라이브 캠페인 {groups.length}개 · 5분마다 자동 갱신
           </p>
         </div>
         {pendingCount > 0 && (
           <Link
             href="/dashboard/queue"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ background: '#fefce8', border: '1px solid #fde68a', color: '#ca8a04' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            style={{
+              background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              color: '#d97706',
+              boxShadow: '0 0 0 0 rgba(245,158,11,0)',
+            }}
           >
-            <span style={{ fontSize: '8px', color: '#f59e0b' }}>●</span>
+            <span style={{ fontSize: '7px', color: '#f59e0b', animation: 'pulse 2s infinite' }}>●</span>
             승인 대기 {pendingCount}건 →
           </Link>
         )}
@@ -317,34 +364,66 @@ export default async function DashboardPage() {
 
       {/* 오늘 활동 요약 */}
       <div
-        className="rounded-xl p-5 flex items-center gap-6"
-        style={{ background: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+        className="rounded-xl p-5 flex items-center gap-8"
+        style={{
+          background: '#ffffff',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)',
+        }}
       >
         <div>
-          <p className="text-xs font-medium" style={{ color: '#9ca3af' }}>승인 대기</p>
-          <p className="text-3xl font-bold mt-1" style={{ color: pendingCount > 0 ? '#ca8a04' : '#111827' }}>
-            {pendingCount}
-            <span className="text-sm font-normal ml-1" style={{ color: '#9ca3af' }}>건</span>
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#a1a1aa' }}>승인 대기</p>
+          <div className="flex items-baseline gap-1.5 mt-1.5">
+            <p
+              className="font-black"
+              style={{
+                fontSize: '36px',
+                color: pendingCount > 0 ? '#d97706' : '#0f0f11',
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+              }}
+            >
+              {pendingCount}
+            </p>
+            <span className="text-sm font-medium" style={{ color: '#a1a1aa' }}>건</span>
+          </div>
         </div>
-        <div className="w-px self-stretch" style={{ background: '#e5e7eb' }} />
+        <div className="w-px self-stretch" style={{ background: '#f4f4f5' }} />
         <div>
-          <p className="text-xs font-medium" style={{ color: '#9ca3af' }}>오늘 처리 완료</p>
-          <p className="text-3xl font-bold mt-1" style={{ color: '#111827' }}>
-            {todayDone}
-            <span className="text-sm font-normal ml-1" style={{ color: '#9ca3af' }}>건</span>
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#a1a1aa' }}>오늘 처리 완료</p>
+          <div className="flex items-baseline gap-1.5 mt-1.5">
+            <p
+              className="font-black"
+              style={{
+                fontSize: '36px',
+                color: '#0f0f11',
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+              }}
+            >
+              {todayDone}
+            </p>
+            <span className="text-sm font-medium" style={{ color: '#a1a1aa' }}>건</span>
+          </div>
         </div>
       </div>
 
       {/* 캠페인 카드 그리드 */}
       {groups.length === 0 ? (
         <div
-          className="rounded-xl px-6 py-16 text-center"
-          style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
+          className="rounded-xl px-6 py-20 text-center"
+          style={{
+            background: '#ffffff',
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)',
+          }}
         >
-          <p className="text-sm" style={{ color: '#9ca3af' }}>현재 라이브 중인 캠페인이 없습니다</p>
-          <p className="text-xs mt-1" style={{ color: '#c4c9d4' }}>5분마다 자동으로 수집됩니다</p>
+          <div
+            className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            style={{ background: '#f4f4f5' }}
+          >
+            <span style={{ fontSize: '20px' }}>📊</span>
+          </div>
+          <p className="text-sm font-semibold" style={{ color: '#3f3f46' }}>현재 라이브 중인 캠페인이 없습니다</p>
+          <p className="text-xs mt-1" style={{ color: '#a1a1aa' }}>5분마다 자동으로 수집됩니다</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
