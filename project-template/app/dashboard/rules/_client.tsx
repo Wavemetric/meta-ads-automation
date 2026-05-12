@@ -45,6 +45,178 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ── Group view helpers ──────────────────────────────────────────────────────
+
+const TIME_GROUPS: {
+  label: string
+  icon: string
+  filter: (r: AutomationRule) => boolean
+}[] = [
+  { label: '자정 실행',   icon: '🌙', filter: (r) => !!r.is_midnight_rule },
+  { label: '오전 6~9시',  icon: '🕕', filter: (r) => !r.is_midnight_rule && r.time_start === 6  && r.time_end === 9  },
+  { label: '오전 9~12시', icon: '🕘', filter: (r) => !r.is_midnight_rule && r.time_start === 9  && r.time_end === 12 },
+  { label: '낮 12~16시',  icon: '🕛', filter: (r) => !r.is_midnight_rule && r.time_start === 12 && r.time_end === 16 },
+  { label: '오후 4~8시',  icon: '🕓', filter: (r) => !r.is_midnight_rule && r.time_start === 16 && r.time_end === 20 },
+  { label: '저녁 8~11시', icon: '🕗', filter: (r) => !r.is_midnight_rule && r.time_start === 20 && r.time_end === 23 },
+]
+
+type ConditionKey = 'lte_1.0' | 'lte_1.1' | 'gt_1.05' | 'gt_1.1'
+
+const CONDITION_ORDER: ConditionKey[] = ['lte_1.0', 'lte_1.1', 'gt_1.05', 'gt_1.1']
+
+const CONDITION_META: Record<ConditionKey, { label: string; dot: string; color: string }> = {
+  'lte_1.0':  { label: 'CPA ≤ 목표치',           dot: '🟢', color: '#16a34a' },
+  'lte_1.1':  { label: 'CPA ≤ 목표 10% 이내',     dot: '🟢', color: '#16a34a' },
+  'gt_1.05':  { label: 'CPA > 목표 5% 초과',      dot: '🟡', color: '#ca8a04' },
+  'gt_1.1':   { label: 'CPA > 목표 10% 초과',     dot: '🔴', color: '#dc2626' },
+}
+
+function getConditionKey(r: AutomationRule): ConditionKey | null {
+  const m = r.threshold_multiplier
+  if (r.operator === 'lte' && m === 1.0)  return 'lte_1.0'
+  if (r.operator === 'lte' && m === 1.1)  return 'lte_1.1'
+  if (r.operator === 'gt'  && m === 1.05) return 'gt_1.05'
+  if (r.operator === 'gt'  && m === 1.1)  return 'gt_1.1'
+  return null
+}
+
+function getScopeLabel(scope: string): string {
+  if (scope === 'campaign') return 'ASC'
+  if (scope === 'adset')    return '광고세트'
+  if (scope === 'creative') return '소재'
+  return scope
+}
+
+function getActionText(action: string, actionValue: number | null): string {
+  switch (action) {
+    case 'increase_budget':
+      if (actionValue === 0.3) return '예산 +30%'
+      return actionValue ? `예산 +${Math.round(actionValue * 100)}%` : '예산 증가'
+    case 'decrease_budget':
+      if (actionValue === 0.1) return '예산 -10%'
+      return actionValue ? `예산 -${Math.round(actionValue * 100)}%` : '예산 감소'
+    case 'set_budget_current':          return '예산 현상유지'
+    case 'set_budget_yesterday':        return '예산 전일 동일'
+    case 'set_budget_yesterday_70pct':  return '예산 전일 70%'
+    case 'set_budget_yesterday_50pct':  return '예산 전일 50%'
+    case 'resume':                      return '켜기'
+    case 'pause':                       return '끄기'
+    default:                            return action
+  }
+}
+
+interface ActionChipProps {
+  rule: AutomationRule
+  conditionColor: string
+}
+
+function ActionChip({ rule, conditionColor }: ActionChipProps) {
+  const scopeLabel  = getScopeLabel(rule.scope ?? 'campaign')
+  const actionText  = getActionText(rule.action, rule.action_value)
+  const faded       = !rule.is_active
+
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-xs whitespace-nowrap"
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        opacity: faded ? 0.45 : 1,
+      }}
+    >
+      <span style={{ color: '#9ca3af' }}>{scopeLabel}</span>
+      <span style={{ color: '#d1d5db', margin: '0 2px' }}>→</span>
+      <span style={{ color: conditionColor, fontWeight: 500 }}>{actionText}</span>
+    </span>
+  )
+}
+
+interface GroupCardProps {
+  label: string
+  icon: string
+  rules: AutomationRule[]
+  onEdit: (r: AutomationRule) => void
+}
+
+function GroupCard({ label, icon, rules }: GroupCardProps) {
+  if (rules.length === 0) return null
+
+  // bucket rules by condition key, including ungrouped
+  const buckets: Record<string, AutomationRule[]> = {}
+  const ungrouped: AutomationRule[] = []
+
+  for (const r of rules) {
+    const key = getConditionKey(r)
+    if (key) {
+      if (!buckets[key]) buckets[key] = []
+      buckets[key].push(r)
+    } else {
+      ungrouped.push(r)
+    }
+  }
+
+  const orderedKeys = CONDITION_ORDER.filter(k => buckets[k]?.length)
+  const hasUngrouped = ungrouped.length > 0
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ background: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+    >
+      {/* Card header */}
+      <div
+        className="flex items-center gap-2 px-4 py-3"
+        style={{ borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}
+      >
+        <span style={{ fontSize: '16px' }}>{icon}</span>
+        <span className="text-sm font-semibold" style={{ color: '#111827' }}>{label}</span>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full ml-1"
+          style={{ background: '#f3f4f6', color: '#6b7280' }}
+        >
+          {rules.length}개 규칙
+        </span>
+      </div>
+
+      {/* Condition groups */}
+      <div className="divide-y" style={{ borderColor: '#f3f4f6' }}>
+        {orderedKeys.map(key => {
+          const meta  = CONDITION_META[key]
+          const group = buckets[key]
+          return (
+            <div key={key} className="px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span style={{ fontSize: '13px' }}>{meta.dot}</span>
+                <span className="text-xs font-medium" style={{ color: meta.color }}>{meta.label}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {group.map(r => (
+                  <ActionChip key={r.id} rule={r} conditionColor={meta.color} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {hasUngrouped && (
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-xs font-medium" style={{ color: '#6b7280' }}>기타 조건</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {ungrouped.map(r => (
+                <ActionChip key={r.id} rule={r} conditionColor="#6b7280" />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ──────────────────────────────────────────────────────────
+
 export default function RulesPage() {
   const supabase = createBrowserClient()
   const [rules, setRules] = useState<AutomationRule[]>([])
@@ -53,6 +225,7 @@ export default function RulesPage() {
   const [showForm, setShowForm] = useState(false)
   const [formTab, setFormTab] = useState<'condition' | 'filter'>('condition')
   const [listTab, setListTab] = useState<'all' | 'active' | 'inactive'>('all')
+  const [viewMode, setViewMode] = useState<'list' | 'group'>('group')
 
   async function load() {
     const { data } = await supabase.from('automation_rules').select('*').order('created_at')
@@ -110,6 +283,9 @@ export default function RulesPage() {
     active: rules.filter(r => r.is_active).length,
     inactive: rules.filter(r => !r.is_active).length,
   }
+
+  // Active rules for group view (always show all active)
+  const activeRules = rules.filter(r => r.is_active)
 
   return (
     <div className="space-y-6">
@@ -427,10 +603,10 @@ export default function RulesPage() {
             style={{ borderTop: '1px solid #f3f4f6', background: '#fafafa' }}
           >
             <div className="flex gap-1.5">
-              {(['condition', 'filter'] as const).map((t, i) => (
+              {(['condition', 'filter'] as const).map((t) => (
                 <div
                   key={t}
-                  className="w-1.5 h-1.5 rounded-full"
+                  className="w-1.5 h-1.5 rounded-full cursor-pointer"
                   style={{ background: formTab === t ? '#3b82f6' : '#d1d5db' }}
                   onClick={() => setFormTab(t)}
                 />
@@ -466,19 +642,63 @@ export default function RulesPage() {
         </div>
       )}
 
-      {/* List tabs */}
+      {/* Tab bar row: list tabs (left) + view toggle (right) */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
+        {/* 전체/활성/비활성 — only shown in list view */}
+        {viewMode === 'list' ? (
+          <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
+            {([
+              { key: 'all',      label: '전체' },
+              { key: 'active',   label: '활성' },
+              { key: 'inactive', label: '비활성' },
+            ] as const).map(t => (
+              <button
+                key={t.key}
+                onClick={() => setListTab(t.key)}
+                className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-150 flex items-center gap-1.5"
+                style={listTab === t.key ? {
+                  background: '#ffffff',
+                  color: '#111827',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                } : {
+                  color: '#9ca3af',
+                }}
+              >
+                {t.label}
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full"
+                  style={listTab === t.key ? {
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                  } : {
+                    background: 'transparent',
+                    color: '#c4c9d4',
+                  }}
+                >
+                  {listTabCounts[t.key]}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          /* placeholder to keep flex justify-between alignment */
+          <div />
+        )}
+
+        {/* View mode toggle: 목록 | 그룹 */}
+        <div
+          className="flex gap-0.5 p-0.5 rounded-lg"
+          style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}
+        >
           {([
-            { key: 'all',      label: '전체' },
-            { key: 'active',   label: '활성' },
-            { key: 'inactive', label: '비활성' },
-          ] as const).map(t => (
+            { key: 'list',  label: '목록' },
+            { key: 'group', label: '그룹' },
+          ] as const).map(v => (
             <button
-              key={t.key}
-              onClick={() => setListTab(t.key)}
-              className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-150 flex items-center gap-1.5"
-              style={listTab === t.key ? {
+              key={v.key}
+              onClick={() => setViewMode(v.key)}
+              className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-150"
+              style={viewMode === v.key ? {
                 background: '#ffffff',
                 color: '#111827',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
@@ -486,130 +706,148 @@ export default function RulesPage() {
                 color: '#9ca3af',
               }}
             >
-              {t.label}
-              <span
-                className="text-xs px-1.5 py-0.5 rounded-full"
-                style={listTab === t.key ? {
-                  background: '#f3f4f6',
-                  color: '#6b7280',
-                } : {
-                  background: 'transparent',
-                  color: '#c4c9d4',
-                }}
-              >
-                {listTabCounts[t.key]}
-              </span>
+              {v.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Rules table */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ background: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-      >
-        {filteredRules.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <p className="text-sm" style={{ color: '#9ca3af' }}>
-              {listTab === 'all' ? '등록된 규칙이 없습니다' : `${listTab === 'active' ? '활성' : '비활성'} 규칙이 없습니다`}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                  {['규칙명', '범위', '상품필터', '조건', '액션', '심각도', '시간대', '상태', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#6b7280' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRules.map((r, i) => {
-                  const sev = SEVERITY_STYLE[r.severity]
-                  return (
-                    <tr
-                      key={r.id}
-                      className="transition-colors duration-150 hover:bg-gray-50"
-                      style={{
-                        borderBottom: i < filteredRules.length - 1 ? '1px solid #f3f4f6' : 'none',
-                        opacity: r.is_active ? 1 : 0.45,
-                      }}
-                    >
-                      <td className="px-4 py-3 font-medium" style={{ color: '#111827' }}>
-                        <div className="flex items-center gap-1.5">
-                          {r.is_midnight_rule && (
-                            <span
-                              className="text-xs px-1.5 py-0.5 rounded font-medium shrink-0"
-                              style={{ background: '#eef2ff', border: '1px solid #c7d2fe', color: '#6366f1' }}
-                            >
-                              00시
-                            </span>
-                          )}
-                          {r.name}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#f3f4f6', color: '#6b7280' }}>
-                          {r.scope ?? 'campaign'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
-                        {r.product_filter ?? <span style={{ color: '#9ca3af' }}>전체</span>}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-mono" style={{ color: '#374151' }}>
-                        {r.threshold_type === 'product_cpa'
-                          ? `${r.metric} ${r.operator} 목표×${r.threshold_multiplier}`
-                          : `${r.metric} ${r.operator} ${r.threshold}`}
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: '#374151' }}>{r.action}</td>
-                      <td className="px-4 py-3">
-                        {sev ? (
-                          <span
-                            className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: sev.bg, border: `1px solid ${sev.border}`, color: sev.color }}
-                          >
-                            {r.severity}
+      {/* ── List view ── */}
+      {viewMode === 'list' && (
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ background: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+        >
+          {filteredRules.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <p className="text-sm" style={{ color: '#9ca3af' }}>
+                {listTab === 'all' ? '등록된 규칙이 없습니다' : `${listTab === 'active' ? '활성' : '비활성'} 규칙이 없습니다`}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
+                    {['규칙명', '범위', '상품필터', '조건', '액션', '심각도', '시간대', '상태', ''].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#6b7280' }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRules.map((r, i) => {
+                    const sev = SEVERITY_STYLE[r.severity]
+                    return (
+                      <tr
+                        key={r.id}
+                        className="transition-colors duration-150 hover:bg-gray-50"
+                        style={{
+                          borderBottom: i < filteredRules.length - 1 ? '1px solid #f3f4f6' : 'none',
+                          opacity: r.is_active ? 1 : 0.45,
+                        }}
+                      >
+                        <td className="px-4 py-3 font-medium" style={{ color: '#111827' }}>
+                          <div className="flex items-center gap-1.5">
+                            {r.is_midnight_rule && (
+                              <span
+                                className="text-xs px-1.5 py-0.5 rounded font-medium shrink-0"
+                                style={{ background: '#eef2ff', border: '1px solid #c7d2fe', color: '#6366f1' }}
+                              >
+                                00시
+                              </span>
+                            )}
+                            {r.name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                            {r.scope ?? 'campaign'}
                           </span>
-                        ) : (
-                          <span className="text-xs" style={{ color: '#6b7280' }}>{r.severity}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
-                        {r.time_start != null && r.time_end != null
-                          ? `${r.time_start}~${r.time_end}시`
-                          : <span style={{ color: '#9ca3af' }}>전체</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleToggle(r.id, r.is_active)}
-                          className="text-xs px-2.5 py-1 rounded-md font-medium transition-all duration-150"
-                          style={r.is_active ? {
-                            background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a',
-                          } : {
-                            background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#9ca3af',
-                          }}
-                        >
-                          {r.is_active ? '활성' : '비활성'}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-3">
-                          <button onClick={() => startEdit(r)} className="text-xs" style={{ color: '#3b82f6' }}>수정</button>
-                          <button onClick={() => handleDelete(r.id)} className="text-xs" style={{ color: '#dc2626' }}>삭제</button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
+                          {r.product_filter ?? <span style={{ color: '#9ca3af' }}>전체</span>}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono" style={{ color: '#374151' }}>
+                          {r.threshold_type === 'product_cpa'
+                            ? `${r.metric} ${r.operator} 목표×${r.threshold_multiplier}`
+                            : `${r.metric} ${r.operator} ${r.threshold}`}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: '#374151' }}>{r.action}</td>
+                        <td className="px-4 py-3">
+                          {sev ? (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded-full font-medium"
+                              style={{ background: sev.bg, border: `1px solid ${sev.border}`, color: sev.color }}
+                            >
+                              {r.severity}
+                            </span>
+                          ) : (
+                            <span className="text-xs" style={{ color: '#6b7280' }}>{r.severity}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: '#6b7280' }}>
+                          {r.time_start != null && r.time_end != null
+                            ? `${r.time_start}~${r.time_end}시`
+                            : <span style={{ color: '#9ca3af' }}>전체</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleToggle(r.id, r.is_active)}
+                            className="text-xs px-2.5 py-1 rounded-md font-medium transition-all duration-150"
+                            style={r.is_active ? {
+                              background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a',
+                            } : {
+                              background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#9ca3af',
+                            }}
+                          >
+                            {r.is_active ? '활성' : '비활성'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-3">
+                            <button onClick={() => startEdit(r)} className="text-xs" style={{ color: '#3b82f6' }}>수정</button>
+                            <button onClick={() => handleDelete(r.id)} className="text-xs" style={{ color: '#dc2626' }}>삭제</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Group view ── */}
+      {viewMode === 'group' && (
+        <div className="space-y-4">
+          {activeRules.length === 0 ? (
+            <div
+              className="rounded-xl px-6 py-16 text-center"
+              style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
+            >
+              <p className="text-sm" style={{ color: '#9ca3af' }}>활성화된 규칙이 없습니다</p>
+            </div>
+          ) : (
+            TIME_GROUPS.map(tg => {
+              const groupRules = activeRules.filter(tg.filter)
+              if (groupRules.length === 0) return null
+              return (
+                <GroupCard
+                  key={tg.label}
+                  label={tg.label}
+                  icon={tg.icon}
+                  rules={groupRules}
+                  onEdit={startEdit}
+                />
+              )
+            })
+          )}
+        </div>
+      )}
     </div>
   )
 }
