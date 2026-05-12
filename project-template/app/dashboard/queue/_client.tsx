@@ -328,24 +328,32 @@ function HistoryRow({ item }: { item: ActionQueue }) {
   )
 }
 
+const BUDGET_ACTIONS = new Set(['decrease_budget', 'increase_budget', 'set_budget_yesterday', 'set_budget_yesterday_50pct', 'set_budget_yesterday_70pct', 'replace_creative'])
+const TOGGLE_ACTIONS = new Set(['pause', 'resume'])
+const SKIP_ACTIONS   = new Set(['set_budget_current'])
+
+type MainTab = 'budget' | 'toggle' | 'history'
+
 export default function QueuePage() {
   const supabase = createBrowserClient()
-  const [items, setItems] = useState<ActionQueue[]>([])
+  const [pending, setPending] = useState<ActionQueue[]>([])
+  const [history, setHistory] = useState<ActionQueue[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'pending' | 'history'>('pending')
+  const [tab, setTab] = useState<MainTab>('budget')
 
   const loadItems = useCallback(async () => {
     setLoading(true)
-    const q = supabase.from('action_queue').select('*').order('created_at', { ascending: false }).limit(100)
-    if (tab === 'pending') {
-      q.eq('status', 'pending')
-    } else {
-      q.in('status', ['approved', 'rejected', 'executed', 'failed'])
-    }
-    const { data } = await q
-    setItems(data ?? [])
+    const [pendingRes, historyRes] = await Promise.all([
+      supabase.from('action_queue').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(200),
+      supabase.from('action_queue').select('*').in('status', ['approved', 'rejected', 'executed', 'failed']).order('created_at', { ascending: false }).limit(100),
+    ])
+    const filteredPending = (pendingRes.data ?? []).filter(item =>
+      !SKIP_ACTIONS.has((item.proposed_change as any)?.action)
+    )
+    setPending(filteredPending)
+    setHistory(historyRes.data ?? [])
     setLoading(false)
-  }, [supabase, tab])
+  }, [supabase])
 
   useEffect(() => {
     loadItems()
@@ -375,6 +383,16 @@ export default function QueuePage() {
     loadItems()
   }
 
+  const budgetItems = pending.filter(item => BUDGET_ACTIONS.has((item.proposed_change as any)?.action))
+  const toggleItems = pending.filter(item => TOGGLE_ACTIONS.has((item.proposed_change as any)?.action))
+  const visibleItems = tab === 'budget' ? budgetItems : tab === 'toggle' ? toggleItems : history
+
+  const tabConfig: { key: MainTab; label: string; count?: number }[] = [
+    { key: 'budget', label: '예산 조치', count: budgetItems.length },
+    { key: 'toggle', label: '온오프 조치', count: toggleItems.length },
+    { key: 'history', label: '실행 이력' },
+  ]
+
   return (
     <div className="space-y-6">
       <div>
@@ -382,7 +400,7 @@ export default function QueuePage() {
           최적화 실행
         </h1>
         <p className="text-sm mt-1" style={{ color: '#a1a1aa' }}>
-          {tab === 'pending' ? '검토 후 승인하면 조치 완료로 처리됩니다' : '처리된 조치 이력입니다'}
+          {tab === 'history' ? '처리된 조치 이력입니다' : '검토 후 승인하면 조치 완료로 처리됩니다'}
         </p>
       </div>
 
@@ -391,12 +409,12 @@ export default function QueuePage() {
         className="flex gap-1 p-1 rounded-xl w-fit"
         style={{ background: '#f4f4f5', border: '1px solid #e4e4e7' }}
       >
-        {([['pending', '승인 대기'], ['history', '실행 이력']] as const).map(([v, label]) => (
+        {tabConfig.map(({ key, label, count }) => (
           <button
-            key={v}
-            onClick={() => setTab(v)}
-            className="text-sm px-4 py-2 rounded-lg font-semibold transition-all duration-150"
-            style={tab === v ? {
+            key={key}
+            onClick={() => setTab(key)}
+            className="text-sm px-4 py-2 rounded-lg font-semibold transition-all duration-150 flex items-center gap-1.5"
+            style={tab === key ? {
               background: '#ffffff',
               color: '#0f0f11',
               boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -405,6 +423,19 @@ export default function QueuePage() {
             }}
           >
             {label}
+            {count != null && count > 0 && (
+              <span
+                className="rounded-full font-bold"
+                style={{
+                  fontSize: '10px',
+                  padding: '1px 6px',
+                  background: tab === key ? 'rgba(245,158,11,0.15)' : '#e4e4e7',
+                  color: tab === key ? '#d97706' : '#a1a1aa',
+                }}
+              >
+                {count}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -418,7 +449,7 @@ export default function QueuePage() {
       )}
 
       {/* 빈 상태 */}
-      {!loading && items.length === 0 && (
+      {!loading && visibleItems.length === 0 && (
         <div
           className="rounded-2xl px-6 py-20 text-center"
           style={{
@@ -433,20 +464,20 @@ export default function QueuePage() {
             <span style={{ color: '#10b981', fontSize: '20px' }}>✓</span>
           </div>
           <p className="text-sm font-semibold" style={{ color: '#3f3f46' }}>
-            {tab === 'pending' ? '승인 대기 항목이 없습니다' : '실행 이력이 없습니다'}
+            {tab === 'history' ? '실행 이력이 없습니다' : '조치 필요 항목이 없습니다'}
           </p>
           <p className="text-xs mt-1.5" style={{ color: '#a1a1aa' }}>
-            {tab === 'pending' ? '규칙 조건에 맞는 캠페인이 감지되면 여기에 표시됩니다' : '처리된 조치가 여기에 표시됩니다'}
+            {tab === 'history' ? '처리된 조치가 여기에 표시됩니다' : '규칙 조건에 맞는 캠페인이 감지되면 여기에 표시됩니다'}
           </p>
         </div>
       )}
 
       <div className="space-y-4">
-        {tab === 'pending'
-          ? items.map(item => (
+        {tab !== 'history'
+          ? visibleItems.map(item => (
               <PendingCard key={item.id} item={item} onApprove={handleApprove} onReject={handleReject} />
             ))
-          : items.map(item => <HistoryRow key={item.id} item={item} />)
+          : visibleItems.map(item => <HistoryRow key={item.id} item={item} />)
         }
       </div>
     </div>
