@@ -91,15 +91,13 @@ export async function runRuleEngine() {
       const effectiveThreshold = getEffectiveThreshold(rule, productTargetCpa)
       if (!evaluate(metricValue, rule.operator as Operator, effectiveThreshold)) continue
 
-      // 동일 규칙 + 캠페인이 이미 pending이면 중복 방지
-      const { count } = await supabase
+      // 동일 규칙 + 캠페인의 기존 pending 삭제 후 최신 내용으로 교체
+      await supabase
         .from('action_queue')
-        .select('id', { count: 'exact', head: true })
+        .delete()
         .eq('rule_id', rule.id)
         .eq('campaign_id', snapshot.campaign_id)
         .eq('status', 'pending')
-
-      if ((count ?? 0) > 0) continue
 
       // 현상유지 액션은 실제 조치가 없으므로 큐에 넣지 않음
       if (rule.action === 'set_budget_current') continue
