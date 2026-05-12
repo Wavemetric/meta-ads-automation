@@ -9,6 +9,7 @@ export interface Database {
       campaigns_snapshot: {
         Row: {
           id: string
+          account_id: string | null
           campaign_id: string
           campaign_name: string | null
           adset_id: string | null
@@ -25,6 +26,7 @@ export interface Database {
         }
         Insert: {
           id?: string
+          account_id?: string | null
           campaign_id: string
           campaign_name?: string | null
           adset_id?: string | null
@@ -41,6 +43,7 @@ export interface Database {
         }
         Update: {
           id?: string
+          account_id?: string | null
           campaign_id?: string
           campaign_name?: string | null
           adset_id?: string | null

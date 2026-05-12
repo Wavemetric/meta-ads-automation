@@ -20,6 +20,7 @@ export function normalizeInsight(i: MetaInsight): SnapshotInsert {
   const ctr = parseFloat(i.ctr) || null
 
   return {
+    account_id: i.account_id,
     campaign_id: i.campaign_id,
     campaign_name: i.campaign_name,
     adset_id: i.adset_id,

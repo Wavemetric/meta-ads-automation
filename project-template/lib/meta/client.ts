@@ -1,13 +1,7 @@
 const META_BASE = 'https://graph.facebook.com/v21.0'
 
-// wavemetric-automation의 기존 광고 계정 ID
-export const AD_ACCOUNTS = {
-  마미케어_통합: 'act_525467572586537',
-  mommycare_kr: 'act_1394935021888163',
-  성분에디터_올리브: 'act_713172176082442',
-}
-
 export type MetaInsight = {
+  account_id: string
   campaign_id: string
   campaign_name: string
   adset_id: string
@@ -58,21 +52,20 @@ export async function fetchCampaignInsights(
   return (data.data ?? []) as MetaInsight[]
 }
 
-// 모든 광고 계정 인사이트 통합 수집
-// META_AD_ACCOUNT_IDS 환경변수 우선 사용 (쉼표 구분), 없으면 AD_ACCOUNTS 폴백
+// META_AD_ACCOUNT_IDS 환경변수 계정들의 인사이트 수집 (account_id 태그 포함)
 export async function fetchAllAccountInsights(datePreset = 'today'): Promise<MetaInsight[]> {
-  const envIds = process.env.META_AD_ACCOUNT_IDS
-  const accountIds = envIds
-    ? envIds.split(',').map(s => s.trim()).filter(Boolean)
-    : Object.values(AD_ACCOUNTS)
+  const accountIds = (process.env.META_AD_ACCOUNT_IDS ?? '')
+    .split(',').map(s => s.trim()).filter(Boolean)
+
   const results = await Promise.allSettled(
     accountIds.map(id => fetchCampaignInsights(id, datePreset))
   )
 
   const insights: MetaInsight[] = []
-  for (const result of results) {
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]
     if (result.status === 'fulfilled') {
-      insights.push(...result.value)
+      insights.push(...result.value.map(insight => ({ ...insight, account_id: accountIds[i] })))
     }
   }
   return insights
