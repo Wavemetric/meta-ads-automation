@@ -150,6 +150,32 @@ export interface Database {
         }
         Relationships: []
       }
+      promotion_target_cpas: {
+        Row: {
+          id: string
+          promotion_name: string
+          target_cpa: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          promotion_name: string
+          target_cpa: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          promotion_name?: string
+          target_cpa?: number
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       action_queue: {
         Row: {
           id: string
@@ -306,6 +332,7 @@ export type ActionQueue = Database['public']['Tables']['action_queue']['Row']
 export type ExecutionLog = Database['public']['Tables']['execution_log']['Row']
 export type Creative = Database['public']['Tables']['creatives']['Row']
 export type ProductTargetCpa = Database['public']['Tables']['product_target_cpas']['Row']
+export type PromotionTargetCpa = Database['public']['Tables']['promotion_target_cpas']['Row']
 
 export type ProposedChange = {
   action: string

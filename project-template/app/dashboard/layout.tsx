@@ -6,6 +6,7 @@ const NAV = [
   { href: '/dashboard/products',  label: '제품별 CPA' },
   { href: '/dashboard/queue',     label: '승인 대기' },
   { href: '/dashboard/rules',     label: '규칙 관리' },
+  { href: '/dashboard/goals',     label: '목표 설정' },
   { href: '/dashboard/logs',      label: '실행 이력' },
 ]
 
