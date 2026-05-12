@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { evaluate, calcProposedBudget, type Operator } from './evaluators'
-import { sendSlackAlert } from '@/lib/notifications/slack'
+import { sendSlackSummary } from '@/lib/notifications/slack'
 import type { CampaignsSnapshot, AutomationRule, ProductTargetCpa } from '@/lib/supabase/types'
 
 function getKstHour(): number {
@@ -132,10 +132,8 @@ export async function runRuleEngine() {
       .select()
     if (error) throw error
 
-    // 삽입된 항목마다 Slack 알림 발송
-    for (const item of inserted ?? []) {
-      await sendSlackAlert(item as any).catch(() => {})
-    }
+    // 이번 실행 결과를 Slack에 1개 요약 메시지로 발송
+    await sendSlackSummary((inserted ?? []) as any[]).catch(() => {})
   }
 
   return { evaluated: latestByAdset.size, queued: queueItems.length, kstHour, midnightRun }

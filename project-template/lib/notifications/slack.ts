@@ -13,26 +13,53 @@ interface ActionQueueItem {
   }
 }
 
-export async function sendSlackAlert(item: ActionQueueItem) {
+export async function sendSlackSummary(items: ActionQueueItem[]) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL
-  if (!webhookUrl) return
+  if (!webhookUrl || items.length === 0) return
 
   const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? ''
-  const emoji = item.severity === 'high' ? '🚨' : '⚠️'
-  const color = item.severity === 'high' ? '#E53E3E' : '#D69E2E'
+
+  const highCount = items.filter(i => i.severity === 'high').length
+  const mediumCount = items.filter(i => i.severity === 'medium').length
+  const lowCount = items.filter(i => i.severity === 'low').length
+
+  const topSeverity = highCount > 0 ? 'high' : mediumCount > 0 ? 'medium' : 'low'
+  const emoji = topSeverity === 'high' ? '🚨' : '⚠️'
+  const color = topSeverity === 'high' ? '#E53E3E' : '#D69E2E'
+
+  // 심각도 높은 순으로 최대 10개만 표시
+  const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
+  const sorted = [...items].sort((a, b) => (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3))
+  const preview = sorted.slice(0, 10)
+  const rest = items.length - preview.length
+
+  const lines = preview.map(item => {
+    const name = item.proposed_change.adset_name ?? item.campaign_name ?? '(알 수 없음)'
+    const sevLabel = item.severity === 'high' ? '🔴' : item.severity === 'medium' ? '🟡' : '🟢'
+    return `${sevLabel} *${name}* — ${item.proposed_change.action} (${item.proposed_change.metric}: ${Math.round(item.proposed_change.current_value).toLocaleString('ko-KR')})`
+  })
+
+  if (rest > 0) lines.push(`_외 ${rest}건 더 있음_`)
+
+  const severitySummary = [
+    highCount > 0 ? `🔴 HIGH ${highCount}건` : '',
+    mediumCount > 0 ? `🟡 MEDIUM ${mediumCount}건` : '',
+    lowCount > 0 ? `🟢 LOW ${lowCount}건` : '',
+  ].filter(Boolean).join('  |  ')
 
   const message = {
-    text: `${emoji} *메타 광고 자동화 알림*`,
+    text: `${emoji} *메타 광고 자동화 — 총 ${items.length}건 감지*`,
     attachments: [
       {
         color,
         fields: [
-          { title: '광고세트', value: item.proposed_change.adset_name ?? item.campaign_name ?? '(알 수 없음)', short: false },
-          { title: '심각도', value: item.severity.toUpperCase(), short: true },
-          { title: '감지 내용', value: item.proposed_change.reason, short: false },
-          { title: '제안 액션', value: item.proposed_change.action, short: true },
+          { title: '심각도 요약', value: severitySummary, short: false },
+          { title: '감지 항목', value: lines.join('\n'), short: false },
         ],
-        actions: [{ type: 'button', text: '대시보드에서 확인', url: `${dashboardUrl}/dashboard/queue`, style: 'primary' }],
+        actions: [
+          { type: 'button', text: '대시보드에서 확인', url: `${dashboardUrl}/dashboard/queue`, style: 'primary' },
+        ],
+        footer: `${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} 기준`,
       },
     ],
   }
