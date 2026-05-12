@@ -12,6 +12,14 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; border: string }
   failed:   { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  pending:  '대기',
+  approved: '승인됨',
+  rejected: '거절됨',
+  executed: '실행됨',
+  failed:   '실패',
+}
+
 function fmt(v: number | null | undefined, prefix = '') {
   if (v == null) return '-'
   return `${prefix}${v.toLocaleString('ko-KR')}`
@@ -21,15 +29,29 @@ export default function QueuePage() {
   const supabase = createBrowserClient()
   const [items, setItems] = useState<ActionQueue[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'pending' | 'all'>('pending')
+  const [tab, setTab] = useState<'pending' | 'history'>('pending')
 
   const loadItems = useCallback(async () => {
-    const q = supabase.from('action_queue').select('*').order('created_at', { ascending: false }).limit(50)
-    if (filter === 'pending') q.eq('status', 'pending')
-    const { data } = await q
-    setItems(data ?? [])
+    setLoading(true)
+    if (tab === 'pending') {
+      const { data } = await supabase
+        .from('action_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(100)
+      setItems(data ?? [])
+    } else {
+      const { data } = await supabase
+        .from('action_queue')
+        .select('*')
+        .in('status', ['approved', 'rejected', 'executed', 'failed'])
+        .order('created_at', { ascending: false })
+        .limit(100)
+      setItems(data ?? [])
+    }
     setLoading(false)
-  }, [supabase, filter])
+  }, [supabase, tab])
 
   useEffect(() => {
     loadItems()
@@ -59,50 +81,51 @@ export default function QueuePage() {
     loadItems()
   }
 
+  function fmtDate(iso: string) {
+    const d = new Date(iso)
+    const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
+    const mo = String(kst.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(kst.getUTCDate()).padStart(2, '0')
+    const h = String(kst.getUTCHours()).padStart(2, '0')
+    const min = String(kst.getUTCMinutes()).padStart(2, '0')
+    return `${mo}.${day} ${h}:${min}`
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>
-            승인 대기 큐
-          </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-            실행 전 검토가 필요한 액션 목록
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>최적화 실행</h1>
+        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          {tab === 'pending' ? '실행 전 검토가 필요한 액션 목록' : '처리 완료된 액션 이력'}
+        </p>
+      </div>
 
-        {/* Filter tabs */}
-        <div
-          className="flex gap-1 p-1 rounded-lg"
-          style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}
-        >
-          {(['pending', 'all'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-150"
-              style={filter === f ? {
-                background: '#3b82f6',
-                color: '#fff',
-                boxShadow: '0 1px 3px rgba(59,130,246,0.3)',
-              } : {
-                color: '#6b7280',
-              }}
-            >
-              {f === 'pending' ? '대기 중' : '전체'}
-            </button>
-          ))}
-        </div>
+      {/* Tabs */}
+      <div
+        className="flex gap-1 p-1 rounded-lg w-fit"
+        style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}
+      >
+        {([['pending', '승인 대기'], ['history', '실행 이력']] as const).map(([v, label]) => (
+          <button
+            key={v}
+            onClick={() => setTab(v)}
+            className="text-sm px-4 py-2 rounded-md font-medium transition-all duration-150"
+            style={tab === v ? {
+              background: '#ffffff',
+              color: '#111827',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            } : { color: '#6b7280' }}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Loading */}
       {loading && (
         <div className="flex items-center gap-2 py-4" style={{ color: '#9ca3af' }}>
-          <div
-            className="w-3 h-3 rounded-full animate-pulse"
-            style={{ background: '#3b82f6' }}
-          />
+          <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: '#3b82f6' }} />
           <span className="text-sm">불러오는 중...</span>
         </div>
       )}
@@ -111,11 +134,7 @@ export default function QueuePage() {
       {!loading && items.length === 0 && (
         <div
           className="rounded-xl px-6 py-16 text-center"
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          }}
+          style={{ background: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
         >
           <div
             className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center"
@@ -124,10 +143,10 @@ export default function QueuePage() {
             <span style={{ color: '#16a34a', fontSize: '18px' }}>✓</span>
           </div>
           <p className="text-sm font-medium" style={{ color: '#374151' }}>
-            승인 대기 항목이 없습니다
+            {tab === 'pending' ? '승인 대기 항목이 없습니다' : '실행 이력이 없습니다'}
           </p>
           <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
-            규칙이 위반되면 이곳에 표시됩니다
+            {tab === 'pending' ? '규칙이 위반되면 이곳에 표시됩니다' : '처리된 액션이 이곳에 표시됩니다'}
           </p>
         </div>
       )}
@@ -157,11 +176,7 @@ export default function QueuePage() {
                     {change.is_midnight_rule && (
                       <span
                         className="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium"
-                        style={{
-                          background: '#eef2ff',
-                          border: '1px solid #c7d2fe',
-                          color: '#6366f1',
-                        }}
+                        style={{ background: '#eef2ff', border: '1px solid #c7d2fe', color: '#6366f1' }}
                       >
                         00시 규칙
                       </span>
@@ -181,20 +196,14 @@ export default function QueuePage() {
                       <span className="text-xs" style={{ color: '#9ca3af' }}>액션</span>
                       <p className="text-xs font-medium mt-0.5" style={{ color: '#2563eb' }}>{change.action}</p>
                     </div>
-                    <div
-                      className="w-px self-stretch"
-                      style={{ background: '#e5e7eb' }}
-                    />
+                    <div className="w-px self-stretch" style={{ background: '#e5e7eb' }} />
                     <div>
                       <span className="text-xs" style={{ color: '#9ca3af' }}>현재값</span>
                       <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>
                         {fmt(change.current_value)}
                       </p>
                     </div>
-                    <div
-                      className="w-px self-stretch"
-                      style={{ background: '#e5e7eb' }}
-                    />
+                    <div className="w-px self-stretch" style={{ background: '#e5e7eb' }} />
                     <div>
                       <span className="text-xs" style={{ color: '#9ca3af' }}>임계값</span>
                       <p className="text-xs font-medium mt-0.5" style={{ color: '#374151' }}>
@@ -203,10 +212,7 @@ export default function QueuePage() {
                     </div>
                     {change.proposed_budget != null && (
                       <>
-                        <div
-                          className="w-px self-stretch"
-                          style={{ background: '#e5e7eb' }}
-                        />
+                        <div className="w-px self-stretch" style={{ background: '#e5e7eb' }} />
                         <div>
                           <span className="text-xs" style={{ color: '#9ca3af' }}>제안 예산</span>
                           <p className="text-xs font-medium mt-0.5" style={{ color: '#16a34a' }}>
@@ -218,24 +224,21 @@ export default function QueuePage() {
                   </div>
 
                   <p className="text-xs mt-2" style={{ color: '#9ca3af' }}>
-                    {new Date(item.created_at).toLocaleString('ko-KR')}
+                    {fmtDate(item.created_at)} KST
+                    {item.approved_by && ` · ${item.approved_by}`}
                   </p>
                 </div>
 
                 {/* Status badge */}
                 <span
                   className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium"
-                  style={{
-                    background: stat.bg,
-                    border: `1px solid ${stat.border}`,
-                    color: stat.color,
-                  }}
+                  style={{ background: stat.bg, border: `1px solid ${stat.border}`, color: stat.color }}
                 >
-                  {item.status}
+                  {STATUS_LABEL[item.status] ?? item.status}
                 </span>
               </div>
 
-              {/* Action buttons */}
+              {/* Action buttons — pending only */}
               {item.status === 'pending' && (
                 <div className="flex justify-end gap-2 mt-3">
                   <button
@@ -248,11 +251,7 @@ export default function QueuePage() {
                   <button
                     onClick={() => handleReject(item.id)}
                     className="text-xs px-3 py-1.5 rounded-md font-medium transition-colors"
-                    style={{
-                      background: '#fef2f2',
-                      border: '1px solid #fecaca',
-                      color: '#dc2626',
-                    }}
+                    style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626' }}
                   >
                     거절
                   </button>

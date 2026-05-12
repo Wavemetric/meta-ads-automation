@@ -1,13 +1,20 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-const NAV = [
-  { href: '/dashboard',           label: 'KPI 모니터링' },
-  { href: '/dashboard/products',  label: '제품별 CPA' },
-  { href: '/dashboard/queue',     label: '승인 대기' },
-  { href: '/dashboard/rules',     label: '규칙 관리' },
-  { href: '/dashboard/goals',     label: '목표 설정' },
-  { href: '/dashboard/logs',      label: '실행 이력' },
+type NavLink  = { type: 'link';  href: string; label: string }
+type NavGroup = { type: 'group'; label: string; children: { href: string; label: string }[] }
+
+const NAV: (NavLink | NavGroup)[] = [
+  { type: 'link', href: '/dashboard', label: '대시보드' },
+  {
+    type: 'group',
+    label: '최적화 기준',
+    children: [
+      { href: '/dashboard/goals', label: 'CPA 설정' },
+      { href: '/dashboard/rules', label: '트리거 설정' },
+    ],
+  },
+  { type: 'link', href: '/dashboard/queue', label: '최적화 실행' },
 ]
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -16,10 +23,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside
         className="w-56 shrink-0 flex flex-col"
-        style={{
-          background: '#ffffff',
-          borderRight: '1px solid #e5e7eb',
-        }}
+        style={{ background: '#ffffff', borderRight: '1px solid #e5e7eb' }}
       >
         {/* Logo */}
         <div className="px-5 py-6" style={{ borderBottom: '1px solid #e5e7eb' }}>
@@ -44,35 +48,44 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="block px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-gray-100"
-              style={{
-                color: '#6b7280',
-              }}
-            >
-              <span className="nav-item-inner">{label}</span>
-            </Link>
-          ))}
+          {NAV.map(item =>
+            item.type === 'link' ? (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-gray-100"
+                style={{ color: '#374151' }}
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <div key={item.label} className="pt-3 pb-1">
+                <p
+                  className="px-3 mb-1 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: '#9ca3af' }}
+                >
+                  {item.label}
+                </p>
+                {item.children.map(child => (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    className="block pl-5 pr-3 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-gray-100"
+                    style={{ color: '#6b7280' }}
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            )
+          )}
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-4 space-y-2" style={{ borderTop: '1px solid #e5e7eb' }}>
-          <p className="text-xs font-semibold" style={{ color: '#9ca3af' }}>
-            자동 실행 주기
-          </p>
-          <div className="space-y-1 text-xs" style={{ color: '#9ca3af' }}>
-            <p>00시 — 일일 규칙 우선 실행</p>
-            <p>매시 — 시간대별 규칙 실행</p>
-          </div>
+        <div className="px-4 py-4" style={{ borderTop: '1px solid #e5e7eb' }}>
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md mt-1"
-            style={{
-              background: '#fefce8',
-              border: '1px solid #fde68a',
-            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md"
+            style={{ background: '#fefce8', border: '1px solid #fde68a' }}
           >
             <span style={{ color: '#eab308', fontSize: '8px', lineHeight: 1 }}>●</span>
             <span className="text-xs font-medium" style={{ color: '#ca8a04' }}>모든 액션 승인 필요</span>
