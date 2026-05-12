@@ -95,7 +95,7 @@ function PendingCard({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="rounded-xl overflow-hidden"
       style={{
         background: '#ffffff',
         boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)',
@@ -103,149 +103,112 @@ function PendingCard({
     >
       {/* 헤더 */}
       <div
-        className="px-5 py-3.5 flex items-center justify-between gap-3"
+        className="px-4 py-3 flex items-center gap-2"
         style={{ borderBottom: '1px solid #f4f4f5' }}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"
-            style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}
-          >
-            {entity.type}
-          </span>
-          <p className="text-sm font-bold truncate" style={{ color: '#0f0f11' }}>{entity.name}</p>
-          {change.is_midnight_rule && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
-              style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#6366f1' }}
-            >
-              자정 규칙
-            </span>
-          )}
-        </div>
         <span
-          className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold"
-          style={{
-            background: 'rgba(245,158,11,0.1)',
-            border: '1px solid rgba(245,158,11,0.3)',
-            color: '#d97706',
-          }}
+          className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
+          style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}
+        >
+          {entity.type}
+        </span>
+        <p className="flex-1 text-sm font-bold truncate min-w-0" style={{ color: '#0f0f11' }}>{entity.name}</p>
+        {change.is_midnight_rule && (
+          <span
+            className="text-xs px-1.5 py-0.5 rounded-full font-semibold shrink-0"
+            style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}
+          >
+            자정
+          </span>
+        )}
+        <span
+          className="shrink-0 text-xs px-2 py-0.5 rounded-full font-semibold"
+          style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706' }}
         >
           검토 필요
         </span>
       </div>
 
-      <div className="p-5 space-y-5">
-        {/* 감지된 상태 */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#a1a1aa' }}>감지된 상태</p>
-          <p className="text-sm leading-relaxed" style={{ color: '#3f3f46' }}>
+      {/* 본문: 2열 */}
+      <div className="p-4 grid grid-cols-2 gap-3">
+        {/* 왼쪽: 감지된 상태 */}
+        <div className="rounded-lg p-3" style={{ background: '#f9f9f9', border: '1px solid #f0f0f0' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#a1a1aa' }}>감지된 상태</p>
+          <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#3f3f46' }}>
             {getStatusSentence(change)}
           </p>
-
-          <div
-            className="flex items-center gap-4 mt-3 px-4 py-3 rounded-xl"
-            style={{ background: '#f9f9f9', border: '1px solid #f0f0f0' }}
-          >
-            <div className="text-center">
-              <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>목표</p>
-              <p className="text-sm font-bold" style={{ color: '#71717a' }}>
-                {fmtMetric(change.metric, change.threshold)}
-              </p>
-            </div>
-            <div className="flex-1 flex items-center">
-              <div className="flex-1 h-px" style={{ background: '#e4e4e7' }} />
-              <span className="mx-2 text-sm" style={{ color: '#a1a1aa' }}>→</span>
-              <div
-                className="flex-1 h-px"
-                style={{ background: over ? '#fca5a5' : '#6ee7b7' }}
-              />
-            </div>
-            <div className="text-center">
-              <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>현재</p>
-              <p className="text-sm font-bold" style={{ color: over ? '#dc2626' : '#059669' }}>
-                {fmtMetric(change.metric, change.current_value)}
-              </p>
-            </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className="text-xs font-bold px-2 py-1 rounded-lg"
+              style={{ background: '#ebebeb', color: '#71717a' }}
+            >
+              목표 {fmtMetric(change.metric, change.threshold)}
+            </span>
+            <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
+            <span
+              className="text-xs font-bold px-2 py-1 rounded-lg"
+              style={{
+                background: over ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                color: over ? '#dc2626' : '#059669',
+              }}
+            >
+              현재 {fmtMetric(change.metric, change.current_value)}
+            </span>
           </div>
         </div>
 
-        {/* 추천 조치 */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#a1a1aa' }}>
-            추천 조치
-            <span className="ml-1.5 font-normal normal-case" style={{ color: '#d4d4d8' }}>규칙 기반</span>
-          </p>
-          <p className="text-sm leading-relaxed" style={{ color: '#3f3f46' }}>
+        {/* 오른쪽: 추천 조치 */}
+        <div
+          className="rounded-lg p-3"
+          style={{
+            background: over ? 'rgba(239,68,68,0.04)' : 'rgba(16,185,129,0.04)',
+            border: `1px solid ${over ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)'}`,
+          }}
+        >
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#a1a1aa' }}>추천 조치</p>
+          <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#3f3f46' }}>
             {getActionSentence(change, entity.type)}
           </p>
 
           {isBudgetAction && change.proposed_budget != null && (
-            <div
-              className="flex items-center gap-4 mt-3 px-4 py-3 rounded-xl"
-              style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}
-            >
-              <div className="text-center">
-                <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>현재</p>
-                <p className="text-sm font-bold" style={{ color: '#71717a' }}>실행 중</p>
-              </div>
-              <div className="flex-1 flex items-center">
-                <div className="flex-1 h-px" style={{ background: '#e4e4e7' }} />
-                <span className="mx-2 text-sm" style={{ color: '#a1a1aa' }}>→</span>
-                <div className="flex-1 h-px" style={{ background: '#6ee7b7' }} />
-              </div>
-              <div className="text-center">
-                <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>제안 예산</p>
-                <p className="text-sm font-bold" style={{ color: '#059669' }}>
-                  ₩{Math.round(change.proposed_budget).toLocaleString('ko-KR')}
-                </p>
-              </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#ebebeb', color: '#71717a' }}>
+                실행 중
+              </span>
+              <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', color: '#059669' }}>
+                ₩{Math.round(change.proposed_budget).toLocaleString('ko-KR')}
+              </span>
             </div>
           )}
 
           {isToggleAction && (
-            <div
-              className="flex items-center gap-4 mt-3 px-4 py-3 rounded-xl"
-              style={{
-                background: change.action === 'pause' ? 'rgba(239,68,68,0.06)' : 'rgba(16,185,129,0.06)',
-                border: `1px solid ${change.action === 'pause' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`,
-              }}
-            >
-              <div className="text-center">
-                <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>현재</p>
-                <p className="text-sm font-bold" style={{ color: '#71717a' }}>
-                  {change.action === 'pause' ? '실행 중' : '정지됨'}
-                </p>
-              </div>
-              <div className="flex-1 flex items-center">
-                <div className="flex-1 h-px" style={{ background: '#e4e4e7' }} />
-                <span className="mx-2 text-sm" style={{ color: '#a1a1aa' }}>→</span>
-                <div
-                  className="flex-1 h-px"
-                  style={{ background: change.action === 'pause' ? '#fca5a5' : '#6ee7b7' }}
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-xs mb-1" style={{ color: '#a1a1aa' }}>변경</p>
-                <p
-                  className="text-sm font-bold"
-                  style={{ color: change.action === 'pause' ? '#dc2626' : '#059669' }}
-                >
-                  {change.action === 'pause' ? '정지' : '재개'}
-                </p>
-              </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#ebebeb', color: '#71717a' }}>
+                {change.action === 'pause' ? '실행 중' : '정지됨'}
+              </span>
+              <span className="text-xs" style={{ color: '#a1a1aa' }}>→</span>
+              <span
+                className="text-xs font-bold px-2 py-1 rounded-lg"
+                style={{
+                  background: change.action === 'pause' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                  color: change.action === 'pause' ? '#dc2626' : '#059669',
+                }}
+              >
+                {change.action === 'pause' ? '정지' : '재개'}
+              </span>
             </div>
           )}
         </div>
-
-        <p className="text-xs" style={{ color: '#d4d4d8' }}>{fmtDate(item.created_at)} KST</p>
       </div>
 
-      {/* 액션 버튼 */}
+      {/* 푸터 */}
       <div
-        className="px-5 py-3.5 flex justify-end gap-2.5"
+        className="px-4 py-3 flex items-center justify-between"
         style={{ borderTop: '1px solid #f4f4f5' }}
       >
+        <span className="text-xs" style={{ color: '#d4d4d8' }}>{fmtDate(item.created_at)} KST</span>
+        <div className="flex gap-2">
         <button
           onClick={() => onReject(item.id)}
           className="text-sm px-4 py-2 rounded-xl font-semibold transition-all duration-200"
@@ -280,6 +243,7 @@ function PendingCard({
         >
           승인
         </button>
+        </div>
       </div>
     </div>
   )
@@ -472,14 +436,17 @@ export default function QueuePage() {
         </div>
       )}
 
-      <div className="space-y-4">
-        {tab !== 'history'
-          ? visibleItems.map(item => (
-              <PendingCard key={item.id} item={item} onApprove={handleApprove} onReject={handleReject} />
-            ))
-          : visibleItems.map(item => <HistoryRow key={item.id} item={item} />)
-        }
-      </div>
+      {tab !== 'history' ? (
+        <div className="grid grid-cols-2 gap-4">
+          {visibleItems.map(item => (
+            <PendingCard key={item.id} item={item} onApprove={handleApprove} onReject={handleReject} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {visibleItems.map(item => <HistoryRow key={item.id} item={item} />)}
+        </div>
+      )}
     </div>
   )
 }
