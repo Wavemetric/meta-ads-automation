@@ -13,7 +13,23 @@ interface ActionQueueItem {
   }
 }
 
-export async function sendSlackSummary(items: ActionQueueItem[]) {
+type HandlerSource = { name: string; slack_user_id: string | null; kind: 'promotion' | 'product' }
+
+// 캠페인명 → 멘션할 Slack 유저들 (프로모션 우선)
+function getMentionsForCampaign(
+  campaignName: string | null,
+  handlers: HandlerSource[]
+): string[] {
+  if (!campaignName) return []
+  const name = campaignName.toLowerCase()
+  // 프로모션 매칭이 하나라도 있으면 프로모션만 사용, 없으면 상품 매칭
+  const promoMatches = handlers.filter(h => h.kind === 'promotion' && h.slack_user_id && name.includes(h.name.toLowerCase()))
+  if (promoMatches.length > 0) return Array.from(new Set(promoMatches.map(h => h.slack_user_id!).filter(Boolean)))
+  const productMatches = handlers.filter(h => h.kind === 'product' && h.slack_user_id && name.includes(h.name.toLowerCase()))
+  return Array.from(new Set(productMatches.map(h => h.slack_user_id!).filter(Boolean)))
+}
+
+export async function sendSlackSummary(items: ActionQueueItem[], handlers: HandlerSource[] = []) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL
   if (!webhookUrl || items.length === 0) return
 
@@ -36,7 +52,10 @@ export async function sendSlackSummary(items: ActionQueueItem[]) {
   const lines = preview.map(item => {
     const name = item.proposed_change.adset_name ?? item.campaign_name ?? '(알 수 없음)'
     const sevLabel = item.severity === 'high' ? '🔴' : item.severity === 'medium' ? '🟡' : '🟢'
-    return `${sevLabel} *${name}* — ${item.proposed_change.action} (${item.proposed_change.metric}: ${Math.round(item.proposed_change.current_value).toLocaleString('ko-KR')})`
+    const mentions = getMentionsForCampaign(item.campaign_name, handlers)
+      .map(id => `<@${id}>`).join(' ')
+    const mentionPrefix = mentions ? `${mentions} ` : ''
+    return `${sevLabel} ${mentionPrefix}*${name}* — ${item.proposed_change.action} (${item.proposed_change.metric}: ${Math.round(item.proposed_change.current_value).toLocaleString('ko-KR')})`
   })
 
   if (rest > 0) lines.push(`_외 ${rest}건 더 있음_`)

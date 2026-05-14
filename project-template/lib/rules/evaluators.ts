@@ -11,12 +11,13 @@ export function evaluate(value: number, operator: Operator, threshold: number): 
   }
 }
 
+// baseBudget: 캠페인/광고세트의 현재 일 예산. 모르면 spend로 fallback
 export function calcProposedBudget(
-  currentSpend: number,
+  baseBudget: number,
   action: string,
   actionValue: number | null
 ): number | null {
   if (!action.includes('budget') || !actionValue) return null
   const direction = action === 'increase_budget' ? 1 : -1
-  return Math.round(currentSpend * (1 + direction * actionValue))
+  return Math.round(baseBudget * (1 + direction * actionValue))
 }

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/client'
-import { fetchAllAccountInsights } from '@/lib/meta/client'
-import { normalizeInsight } from '@/lib/meta/collector'
+import { fetchAllAccountInsights, fetchAllAdsetMeta } from '@/lib/meta/client'
+import { normalizeInsight, indexAdsetMeta } from '@/lib/meta/collector'
 
 function verifyCronSecret(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -14,8 +14,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const insights = await fetchAllAccountInsights('today')
-    const rows = insights.map(normalizeInsight)
+    const [insights, adsetMetas] = await Promise.all([
+      fetchAllAccountInsights('today'),
+      fetchAllAdsetMeta(),
+    ])
+    const metaByAdset = indexAdsetMeta(adsetMetas)
+    const rows = insights.map(i => normalizeInsight(i, metaByAdset.get(i.adset_id)))
 
     if (rows.length === 0) {
       return Response.json({ collected: 0, message: 'No insights returned from Meta API' })
