@@ -52,6 +52,46 @@ export async function fetchCampaignInsights(
   return (data.data ?? []) as MetaInsight[]
 }
 
+export type AdsetMeta = {
+  adset_id: string
+  daily_budget: number | null      // 원(KRW) 단위. 광고세트 자체 예산이 없으면 null
+  adset_status: string | null      // 광고세트 effective_status (ACTIVE / PAUSED / ...)
+  campaign_id: string
+  campaign_status: string | null   // 캠페인 effective_status
+  campaign_daily_budget: number | null
+}
+
+// 계정의 모든 광고세트 메타(예산/상태) 조회 — insights 엔드포인트에는 없는 정보
+export async function fetchAdsetMeta(accountId: string): Promise<AdsetMeta[]> {
+  const fields = [
+    'id',
+    'daily_budget',
+    'effective_status',
+    'campaign{id,effective_status,daily_budget}',
+  ].join(',')
+
+  const url = new URL(`${META_BASE}/${accountId}/adsets`)
+  url.searchParams.set('fields', fields)
+  url.searchParams.set('limit', '500')
+  url.searchParams.set('access_token', getToken())
+
+  const data = await metaRequest(url.toString())
+  // daily_budget은 센트 단위로 반환되므로 KRW로 환산 (× 0.01)
+  const toKrw = (v: unknown) => {
+    if (v == null || v === '') return null
+    const n = typeof v === 'string' ? parseFloat(v) : Number(v)
+    return Number.isFinite(n) ? n / 100 : null
+  }
+  return (data.data ?? []).map((a: any): AdsetMeta => ({
+    adset_id: a.id,
+    daily_budget: toKrw(a.daily_budget),
+    adset_status: a.effective_status ?? null,
+    campaign_id: a.campaign?.id ?? '',
+    campaign_status: a.campaign?.effective_status ?? null,
+    campaign_daily_budget: toKrw(a.campaign?.daily_budget),
+  }))
+}
+
 // META_AD_ACCOUNT_IDS 환경변수 계정들의 인사이트 수집 (account_id 태그 포함)
 export async function fetchAllAccountInsights(datePreset = 'today'): Promise<MetaInsight[]> {
   const accountIds = (process.env.META_AD_ACCOUNT_IDS ?? '')
@@ -69,6 +109,19 @@ export async function fetchAllAccountInsights(datePreset = 'today'): Promise<Met
     }
   }
   return insights
+}
+
+// 모든 광고계정의 광고세트 메타(예산/상태) 일괄 조회
+export async function fetchAllAdsetMeta(): Promise<AdsetMeta[]> {
+  const accountIds = (process.env.META_AD_ACCOUNT_IDS ?? '')
+    .split(',').map(s => s.trim()).filter(Boolean)
+
+  const results = await Promise.allSettled(accountIds.map(id => fetchAdsetMeta(id)))
+  const out: AdsetMeta[] = []
+  for (const r of results) {
+    if (r.status === 'fulfilled') out.push(...r.value)
+  }
+  return out
 }
 
 // 캠페인 일 예산 수정

@@ -22,6 +22,9 @@ export interface Database {
           ctr: number | null
           roas: number | null
           revenue: number
+          daily_budget: number | null
+          adset_status: string | null
+          campaign_status: string | null
           captured_at: string
         }
         Insert: {
@@ -39,6 +42,9 @@ export interface Database {
           ctr?: number | null
           roas?: number | null
           revenue?: number
+          daily_budget?: number | null
+          adset_status?: string | null
+          campaign_status?: string | null
           captured_at?: string
         }
         Update: {
@@ -56,6 +62,9 @@ export interface Database {
           ctr?: number | null
           roas?: number | null
           revenue?: number
+          daily_budget?: number | null
+          adset_status?: string | null
+          campaign_status?: string | null
           captured_at?: string
         }
         Relationships: []
@@ -135,6 +144,7 @@ export interface Database {
           product_name: string
           target_cpa: number
           is_active: boolean
+          slack_user_id: string | null
           created_at: string
         }
         Insert: {
@@ -142,6 +152,7 @@ export interface Database {
           product_name: string
           target_cpa: number
           is_active?: boolean
+          slack_user_id?: string | null
           created_at?: string
         }
         Update: {
@@ -149,6 +160,7 @@ export interface Database {
           product_name?: string
           target_cpa?: number
           is_active?: boolean
+          slack_user_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -159,6 +171,7 @@ export interface Database {
           promotion_name: string
           target_cpa: number
           is_active: boolean
+          slack_user_id: string | null
           created_at: string
           updated_at: string
         }
@@ -167,6 +180,7 @@ export interface Database {
           promotion_name: string
           target_cpa: number
           is_active?: boolean
+          slack_user_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -175,6 +189,7 @@ export interface Database {
           promotion_name?: string
           target_cpa?: number
           is_active?: boolean
+          slack_user_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -344,8 +359,14 @@ export type ProposedChange = {
   threshold: number
   reason: string
   proposed_budget?: number | null
+  current_budget?: number | null
+  current_status?: string | null
   product_target_cpa?: number | null
+  target_cpa_source?: 'promotion' | 'product' | null
+  target_cpa_matched_name?: string | null
   is_midnight_rule?: boolean
+  adset_id?: string | null
   adset_name?: string | null
   rule_name?: string | null
+  rule_description?: string | null
 }

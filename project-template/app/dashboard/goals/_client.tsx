@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createBrowserClient } from '@/lib/supabase/browser'
 
-type ProductTarget = { id: string; product_name: string; target_cpa: number; is_active: boolean }
-type PromotionTarget = { id: string; promotion_name: string; target_cpa: number; is_active: boolean }
+type ProductTarget = { id: string; product_name: string; target_cpa: number; is_active: boolean; slack_user_id: string | null }
+type PromotionTarget = { id: string; promotion_name: string; target_cpa: number; is_active: boolean; slack_user_id: string | null }
 
 const inputStyle = {
   border: '1px solid #e4e4e7',
@@ -44,9 +44,11 @@ export default function GoalsClient() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editCpa, setEditCpa] = useState('')
+  const [editSlack, setEditSlack] = useState('')
   const [adding, setAdding] = useState(false)
   const [addName, setAddName] = useState('')
   const [addCpa, setAddCpa] = useState('')
+  const [addSlack, setAddSlack] = useState('')
 
   const loadData = useCallback(async () => {
     const [p, pr] = await Promise.all([
@@ -69,12 +71,17 @@ export default function GoalsClient() {
     setEditingId(item.id)
     setEditName(isProduct ? (item as ProductTarget).product_name : (item as PromotionTarget).promotion_name)
     setEditCpa(String(item.target_cpa))
+    setEditSlack(item.slack_user_id ?? '')
     setAdding(false)
   }
 
   async function handleSave(id: string) {
     if (!editName || !editCpa) return
-    await supabase.from(table as any).update({ [nameKey]: editName, target_cpa: Number(editCpa) }).eq('id', id)
+    await supabase.from(table as any).update({
+      [nameKey]: editName,
+      target_cpa: Number(editCpa),
+      slack_user_id: editSlack.trim() || null,
+    }).eq('id', id)
     setEditingId(null)
     loadData()
   }
@@ -92,10 +99,15 @@ export default function GoalsClient() {
 
   async function handleAdd() {
     if (!addName || !addCpa) return
-    await supabase.from(table as any).insert({ [nameKey]: addName, target_cpa: Number(addCpa) })
+    await supabase.from(table as any).insert({
+      [nameKey]: addName,
+      target_cpa: Number(addCpa),
+      slack_user_id: addSlack.trim() || null,
+    })
     setAdding(false)
     setAddName('')
     setAddCpa('')
+    setAddSlack('')
     loadData()
   }
 
@@ -104,6 +116,7 @@ export default function GoalsClient() {
     setEditingId(null)
     setAddName('')
     setAddCpa('')
+    setAddSlack('')
   }
 
   return (
@@ -187,13 +200,21 @@ export default function GoalsClient() {
               style={{ flex: 1 }}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
             />
-            <span className="text-sm shrink-0 font-medium" style={{ color: '#71717a' }}>목표 CPA ₩</span>
+            <span className="text-sm shrink-0 font-medium" style={{ color: '#71717a' }}>목표 ₩</span>
             <StyledInput
               value={addCpa}
               onChange={e => setAddCpa(e.target.value)}
               placeholder="0"
               type="number"
-              style={{ width: '112px' }}
+              style={{ width: '100px' }}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            />
+            <span className="text-sm shrink-0 font-medium" style={{ color: '#71717a' }}>담당</span>
+            <StyledInput
+              value={addSlack}
+              onChange={e => setAddSlack(e.target.value)}
+              placeholder="U01ABCD2EFG"
+              style={{ width: '140px' }}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
             />
             <button
@@ -239,7 +260,15 @@ export default function GoalsClient() {
                     value={editCpa}
                     onChange={e => setEditCpa(e.target.value)}
                     type="number"
-                    style={{ width: '112px' }}
+                    style={{ width: '100px' }}
+                    onKeyDown={e => e.key === 'Enter' && handleSave(item.id)}
+                  />
+                  <span className="text-sm shrink-0 font-medium" style={{ color: '#71717a' }}>담당</span>
+                  <StyledInput
+                    value={editSlack}
+                    onChange={e => setEditSlack(e.target.value)}
+                    placeholder="U01ABCD2EFG"
+                    style={{ width: '140px' }}
                     onKeyDown={e => e.key === 'Enter' && handleSave(item.id)}
                   />
                   <button
@@ -263,6 +292,19 @@ export default function GoalsClient() {
                   <p className="text-sm font-bold tabular-nums" style={{ color: '#3f3f46' }}>
                     ₩{item.target_cpa.toLocaleString('ko-KR')}
                   </p>
+                  <span
+                    className="text-xs font-mono px-2 py-0.5 rounded shrink-0"
+                    style={{
+                      background: item.slack_user_id ? 'rgba(99,102,241,0.08)' : '#f4f4f5',
+                      color: item.slack_user_id ? '#6366f1' : '#c4c4c8',
+                      border: `1px solid ${item.slack_user_id ? 'rgba(99,102,241,0.2)' : '#e4e4e7'}`,
+                      minWidth: '120px',
+                      textAlign: 'center',
+                    }}
+                    title={item.slack_user_id ? `Slack 멘션 대상: <@${item.slack_user_id}>` : '담당자 미지정'}
+                  >
+                    {item.slack_user_id ?? '담당자 없음'}
+                  </span>
                   <button
                     onClick={() => handleToggle(item.id, item.is_active)}
                     className="text-xs px-2.5 py-1 rounded-full font-semibold transition-all duration-150"
@@ -314,10 +356,11 @@ export default function GoalsClient() {
           color: '#71717a',
         }}
       >
-        <p className="font-semibold" style={{ color: '#3f3f46' }}>매칭 기준</p>
-        <p>• 이름이 <strong>캠페인명에 포함</strong>되면 해당 캠페인 데이터가 자동으로 집계됩니다</p>
+        <p className="font-semibold" style={{ color: '#3f3f46' }}>매칭 기준 (프로모션 우선)</p>
+        <p>• 캠페인명에 <strong>프로모션명이 포함되면 프로모션 CPA</strong>를, 없으면 <strong>상품 CPA</strong>를 사용합니다</p>
         <p>• 예) 상품명 <strong>"팝콘"</strong> → <strong>"[콘스프맛 팝콘] 26.05_..."</strong> 캠페인 자동 매칭</p>
-        <p>• 예) 프로모션명 <strong>"990딜"</strong> → <strong>"[제과_990딜] 26.05_..."</strong> 캠페인 자동 매칭</p>
+        <p>• 예) 프로모션명 <strong>"990딜"</strong> → <strong>"[제과_990딜] 26.05_..."</strong> 캠페인 자동 매칭 (상품보다 우선)</p>
+        <p>• 손익분기점이 바뀌면 여기서 즉시 수정 — 다음 정시 평가부터 새 목표가 적용됩니다</p>
       </div>
     </div>
   )
